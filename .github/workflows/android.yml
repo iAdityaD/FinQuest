@@ -1,0 +1,39 @@
+name: Android build
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx expo install --check
+        continue-on-error: true
+      - run: npx tsc --noEmit
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm install
+      # Generates the native android/ project from app.json.
+      - run: npx expo prebuild --platform android --no-install
+      # Expo's template signs release builds with the debug keystore: fine for testing, not for the Play Store.
+      - run: ./gradlew assembleRelease --no-daemon
+        working-directory: android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: finquest-apk
+          path: android/app/build/outputs/apk/release/*.apk
