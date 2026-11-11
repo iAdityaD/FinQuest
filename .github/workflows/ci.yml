@@ -13,3 +13,12 @@ jobs:
           node-version: 22
       # The unit tests cover the pure logic in src/domain and need no native dependencies.
       - run: npx --yes tsx@4 --test tests/*.test.ts
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx tsc --noEmit

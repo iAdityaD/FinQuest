@@ -1,21 +1,8 @@
-name: Android build
+name: Android APK
+# Manual only: run it from the Actions tab ("Run workflow") when you want an installable build.
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['**.md']
   workflow_dispatch:
 jobs:
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm install
-      - run: npx expo install --check
-        continue-on-error: true
-      - run: npx tsc --noEmit
   apk:
     runs-on: ubuntu-latest
     steps:

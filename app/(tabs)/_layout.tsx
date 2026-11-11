@@ -31,7 +31,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           key={tab.name}
           name={tab.name}
-          options={{ title: tab.title, tabBarIcon: ({ color }) => <Sprite name={tab.sprite} size={20} tint={color} /> }}
+          options={{ title: tab.title, tabBarIcon: ({ color }) => <Sprite name={tab.sprite} size={20} tint={color as string} /> }}
         />
       ))}
     </Tabs>
