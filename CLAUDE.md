@@ -13,8 +13,8 @@ The owner's design reference is a dark pixel-art UI (night sky, chunky bordered 
 - v0.1 was written in a cloud sandbox that could not install packages or run an emulator.
 - **Verified:** the pure logic in `src/domain` (11 unit tests pass), `npm install` resolves on CI, sprite grids are valid.
 - **Not verified:** everything that needs a device. No screen has ever been rendered. Treat all of `app/` and `src/ui/` as plausible but untested.
-- First CI type-check found one error (tab icon `color` type), fixed in the commit that added this file. Re-run `npm run typecheck` to confirm there are no others.
-- The first manual APK build on GitHub Actions was started but its result was never read.
+- Type-check passes on CI (`tsc --noEmit` against the real Expo and React Native types). That proves the code compiles, not that it works.
+- One APK build was started on GitHub Actions (run 43009969619, on the commit before the type fix). Its result was not read: check it with `gh run view 43009969619` before building again.
 
 ## Your first job: Phase 1 (make it run)
 
