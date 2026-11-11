@@ -76,13 +76,7 @@ Rules that keep it easy to scale:
 
 ## Roadmap
 
-- Recurring transactions and bill reminders
-- Custom categories and multiple accounts (cash, bank, card) with transfers
-- Backup and restore to a file, CSV import
-- App lock (PIN / biometrics)
-- Custom month start day (salary day)
-- Home-screen widget for "safe to spend today"
-- Component tests and an end-to-end smoke test
+See [ROADMAP.md](ROADMAP.md): recurring transactions, accounts, backup, split expenses with UPI settle-up and WhatsApp reminders, app lock and more.
 
 ## Contributing
 
