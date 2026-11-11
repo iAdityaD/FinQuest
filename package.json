@@ -1,0 +1,39 @@
+{
+  "name": "finquest",
+  "version": "0.1.0",
+  "description": "Offline, pixel-style personal finance tracker built with React Native (Expo).",
+  "license": "MIT",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo-google-fonts/pixelify-sans": ">=0.2.3",
+    "expo": "^58.0.0",
+    "expo-constants": "~58.0.15",
+    "expo-font": "~58.0.11",
+    "expo-gl": "~58.0.4",
+    "expo-linking": "~58.0.16",
+    "expo-router": "~58.0.30",
+    "expo-splash-screen": "~58.0.13",
+    "expo-sqlite": "~58.0.15",
+    "expo-status-bar": "~58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-screens": "~4.30.1",
+    "three": "^0.180.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.0",
+    "@types/three": "^0.180.0",
+    "tsx": "^4.20.0",
+    "typescript": "~5.9.2"
+  }
+}
