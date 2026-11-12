@@ -9,6 +9,8 @@ Built with React Native (Expo). Android first, iOS from the same codebase. No ac
 ## Features
 
 - **Transactions**: add, edit and delete income and expenses with category, date and note. Search and filter by month.
+- **Repeating transactions**: rent, salary and subscriptions that log themselves every day, week, month or year, and catch up on any they missed while the app was closed. Pause, edit or stop them under More > Repeating.
+- **Your own month start**: paid on the 25th? Set the day your month starts in the savings plan; budgets, analytics and the daily limit then run from pay day to pay day.
 - **Savings plan**: set a monthly income and a monthly savings target. FinQuest shows a **safe to spend today** amount that keeps you on target, and adjusts it every day.
 - **Start or end of month rule**: choose when savings are set aside (see below).
 - **Goals**: save towards something with an optional target date. Each goal shows how much to put in per month and per day.
@@ -69,8 +71,7 @@ Rules that keep it easy to scale:
 
 ## Known gaps
 
-- Not yet verified on a device or emulator. The three.js coin in particular depends on `expo-gl`; if it fails it falls back to a sprite, and it can be turned off in Settings.
-- No `package-lock.json` yet. Commit the one `npm install` creates.
+- First run on an Android emulator: 12 Nov 2026. The smoke checklist in `CLAUDE.md` is only partly walked, and repeating transactions and the custom month start are unit-tested but not yet tried on a device.
 - No date picker: dates are stepped with arrows.
 - Money added to a goal is tracked on the goal only; it is not a transaction.
 

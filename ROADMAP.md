@@ -6,8 +6,8 @@ Agents: read `CLAUDE.md` first for rules, commands and decisions already made.
 | Phase | What | Status |
 | --- | --- | --- |
 | 0 | v0.1 code written (transactions, plan, goals, budgets, analytics, themes) | Done, untested on device |
-| 1 | First device build and smoke test | **Next** |
-| 2 | Recurring transactions, custom categories, custom month start | |
+| 1 | First device build and smoke test | **In progress**: builds and runs on an emulator, checklist partly walked |
+| 2 | Recurring transactions, custom categories, custom month start | 2a and 2c written and unit-tested, not device-tested; 2b not started |
 | 3 | Accounts and transfers | |
 | 4 | Backup, restore, CSV import | |
 | 5 | Split expenses | |
@@ -24,9 +24,9 @@ Every phase follows the same path: **schema migration -> domain functions with t
 
 Steps and the smoke checklist are in `CLAUDE.md` ("Your first job").
 
-- [ ] App builds and opens on an Android emulator
+- [x] App builds and opens on an Android emulator
 - [ ] Smoke checklist passes
-- [ ] `package-lock.json` committed
+- [x] `package-lock.json` committed
 - [ ] Manual "Android APK" workflow produces an installable APK
 
 **Done when:** a fresh clone runs with `npm install && npx expo run:android` and every checklist item passes.

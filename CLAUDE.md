@@ -11,10 +11,20 @@ The owner's design reference is a dark pixel-art UI (night sky, chunky bordered 
 ## What has happened so far
 
 - v0.1 was written in a cloud sandbox that could not install packages or run an emulator.
-- **Verified:** the pure logic in `src/domain` (11 unit tests pass), `npm install` resolves on CI, sprite grids are valid.
-- **Not verified:** everything that needs a device. No screen has ever been rendered. Treat all of `app/` and `src/ui/` as plausible but untested.
-- Type-check passes on CI (`tsc --noEmit` against the real Expo and React Native types). That proves the code compiles, not that it works.
-- One APK build was started on GitHub Actions (run 43009969619, on the commit before the type fix). Its result was not read: check it with `gh run view 43009969619` before building again.
+- **12 Nov 2026: first device build.** A debug APK was built on Windows and run on an Android 14 emulator (x86_64) against Metro.
+- **Seen working on the emulator:** onboarding, "Explore with demo data", Home, Analytics, More, the add-transaction form, adding an expense (balance, month total and "Safe to spend today" all updated), tab and stack navigation, the 3D coin (real WebGL, not the sprite fallback), the pixel font, SQLite opening and migrating.
+- **Not yet walked on a device:** the rest of the smoke checklist below (unticked boxes), plus the Phase 2 work listed next. The emulator ran out of memory on the 8 GB build machine before the checklist was finished.
+- **Written but not verified on a device:** recurring transactions (2a) and custom month start day (2c). Both have unit tests (20 tests pass in total) and type-check, and the Repeat option renders on the form, but no rule has been saved or run on a device.
+- Setup changes made to get there: TypeScript `~6.0.3` and `@types/react` `~19.3.0` (what SDK 58 expects), `react-dom` pinned to 19.3.0 through `overrides` (19.3.1 demands a newer React than Expo pins and breaks `npm install`), `@types/node` added for the test files, the splash config moved from `expo.splash` to the `expo-splash-screen` plugin, `baseUrl` dropped from `tsconfig.json` (deprecated in TypeScript 6). `expo-doctor` passes 20/20.
+- Readability change asked for by the owner: the pixel font is now used for screen titles only. Its digits (2, 3, 7, 8, 9) were too alike to read amounts, so numbers, headings and body text use the system font. The donut is drawn on a 91-cell grid snapped to device pixels.
+- The APK build on GitHub Actions (run 43009969619) was never read: `gh` was not available. Check it before relying on the manual workflow.
+
+### Building on Windows (found the hard way)
+
+- **A space in the user name breaks the native link step.** With the SDK under `C:\Users\First Last\...`, CMake calls the compiler by its 8.3 short name (`CLANG_~1.EXE`), clang then links as C and every C++ library fails with undefined `std::__ndk1` symbols. Fix: point `ANDROID_HOME` and `sdk.dir` at a path without spaces (a junction such as `C:\Android\Sdk` to the real SDK is enough).
+- **The 260-character path limit breaks react-native-reanimated.** From a deep project folder, ninja fails with `mkdir ... No such file or directory`. A `subst` drive does not help (Expo autolinking resolves it back to the real path). Build from a short real path instead, e.g. mirror the project to `C:\fq` and run Gradle there; Metro can still serve JS from the normal folder.
+- **Port 8081 may be taken** (Apache on the owner's machine). The app then shows "Unable to load script". Run `npx expo start --port 8082`, `adb reverse tcp:8082 tcp:8082`, and set the dev server host in the app's dev menu to `localhost:8082`.
+- **8 GB of RAM is not enough for Gradle and the emulator together.** Close the emulator while building, and stop the Gradle daemon (`gradlew --stop`) before testing. A phone over USB is far lighter than the emulator.
 
 ## Your first job: Phase 1 (make it run)
 
@@ -29,7 +39,7 @@ Do these in order. Do not start feature work until the app opens and the checkli
 
 ### Smoke checklist
 
-- [ ] Onboarding shows, currency can be picked, "Get Started" lands on Home.
+- [x] Onboarding shows, currency can be picked, "Get Started" lands on Home. (seen: onboarding and currency picker; the demo-data button was used to enter)
 - [ ] "Explore with demo data" fills Home, Transactions, Analytics, Budget and Goals.
 - [ ] Add an expense and an income; both appear on Home and in Transactions; balance updates.
 - [ ] Edit and delete a transaction (tap to edit, hold to delete).
@@ -41,7 +51,7 @@ Do these in order. Do not start feature work until the app opens and the checkli
 - [ ] Settings: all three themes render legibly; currency change relabels amounts; erase data works.
 - [ ] More > Export CSV opens the share sheet.
 - [ ] The 3D coin spins and speeds up on tap. If it does not render, see "Known risk points".
-- [ ] The pixel font is applied (headings should look blocky). The rupee sign may fall back to the system font; that is acceptable.
+- [x] The pixel font is applied to screen titles (blocky). Amounts and body text use the system font on purpose.
 
 ### Known risk points (check these first when something breaks)
 
