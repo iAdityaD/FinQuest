@@ -44,6 +44,8 @@ export interface Settings {
   monthlySavingsTarget: number;
   saveRule: SaveRule;
   effects3d: boolean;
+  /** Day of the month the budgeting month starts on (1-28). 1 = calendar months. */
+  monthStartDay: number;
   onboarded: boolean;
 }
 
@@ -54,7 +56,28 @@ export const DEFAULT_SETTINGS: Settings = {
   monthlySavingsTarget: 0,
   saveRule: 'start',
   effects3d: true,
+  monthStartDay: 1,
   onboarded: false,
 };
 
 export const OVERALL = 'overall';
+
+export type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+/** A transaction that logs itself: rent, salary, subscriptions. */
+export interface RecurringRule {
+  id: string;
+  type: TxType;
+  amount: number;
+  categoryId: string;
+  note: string;
+  frequency: Frequency;
+  /** Every `interval` days, weeks, months or years. */
+  interval: number;
+  /** First occurrence. Monthly rules keep this day of the month. */
+  anchorDate: ISODate;
+  endDate: ISODate | null;
+  /** Occurrences up to and including this date already exist. */
+  lastRunDate: ISODate | null;
+  active: boolean;
+}

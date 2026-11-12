@@ -49,5 +49,24 @@ async function open() {
       PRAGMA user_version = 1;
     `);
   }
+
+  if (version < 2) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS recurring (
+        id TEXT PRIMARY KEY NOT NULL,
+        type TEXT NOT NULL,
+        amount INTEGER NOT NULL,
+        category_id TEXT NOT NULL,
+        note TEXT NOT NULL DEFAULT '',
+        frequency TEXT NOT NULL,
+        "interval" INTEGER NOT NULL DEFAULT 1,
+        anchor_date TEXT NOT NULL,
+        end_date TEXT,
+        last_run_date TEXT,
+        active INTEGER NOT NULL DEFAULT 1
+      );
+      PRAGMA user_version = 2;
+    `);
+  }
   return db;
 }

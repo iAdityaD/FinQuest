@@ -14,6 +14,7 @@ export default function More() {
   const transactions = useStore((s) => s.transactions);
   const currency = useStore((s) => s.settings.currency);
   const goalCount = useStore((s) => s.goals.length);
+  const repeatCount = useStore((s) => s.recurring.length);
   const arrow = <Txt v="h" color={t.accent}>{'>'}</Txt>;
 
   const exportCsv = async () => {
@@ -33,6 +34,7 @@ export default function More() {
       <Panel>
         <Row sprite="target" title="Goals" subtitle={goalCount ? `${goalCount} active` : 'Save towards something'} right={arrow} onPress={() => router.push('/goals')} />
         <Row sprite="salary" title="Savings plan" subtitle="Monthly target and daily allowance" right={arrow} onPress={() => router.push('/plan')} />
+        <Row sprite="repeat" title="Repeating" subtitle={repeatCount ? `${repeatCount} set up` : 'Rent, salary, subscriptions'} right={arrow} onPress={() => router.push('/recurring')} />
         <Row sprite="bills" title="Export CSV" subtitle={`${transactions.length} transactions`} right={arrow} onPress={exportCsv} />
         <Row sprite="gear" title="Settings" subtitle="Theme, currency, data" right={arrow} onPress={() => router.push('/settings')} />
       </Panel>

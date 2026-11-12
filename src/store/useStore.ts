@@ -2,17 +2,20 @@ import { create } from 'zustand';
 import * as repo from '../data/repo';
 import { today } from '../domain/dates';
 import { demoData } from '../domain/demo';
+import { materialize } from '../domain/recurring';
 import { DEFAULT_SETTINGS } from '../domain/types';
-import type { Budget, Goal, Settings, Transaction } from '../domain/types';
+import type { Budget, Goal, RecurringRule, Settings, Transaction } from '../domain/types';
 
 export type TransactionInput = Omit<Transaction, 'id' | 'createdAt'> & { id?: string };
 export type GoalInput = Omit<Goal, 'id' | 'createdAt'> & { id?: string };
+export type RecurringInput = Omit<RecurringRule, 'id' | 'lastRunDate'> & { id?: string };
 
 interface State {
   ready: boolean;
   transactions: Transaction[]; // newest first
   goals: Goal[];
   budgets: Budget[];
+  recurring: RecurringRule[];
   settings: Settings;
   hydrate: () => Promise<void>;
   saveTransaction: (input: TransactionInput) => void;
@@ -21,6 +24,10 @@ interface State {
   deleteGoal: (id: string) => void;
   contributeToGoal: (id: string, amount: number) => void;
   setBudget: (categoryId: string, amount: number) => void;
+  saveRecurring: (input: RecurringInput) => void;
+  deleteRecurring: (id: string) => void;
+  /** Logs every recurring occurrence that has come due. Safe to call as often as you like. */
+  runRecurring: () => void;
   updateSettings: (patch: Partial<Settings>) => void;
   loadDemo: () => void;
   eraseAll: () => void;
@@ -39,12 +46,14 @@ export const useStore = create<State>()((set, get) => ({
   transactions: [],
   goals: [],
   budgets: [],
+  recurring: [],
   settings: DEFAULT_SETTINGS,
 
   hydrate: async () => {
     try {
       const snapshot = await repo.loadAll();
       set({ ...snapshot, ready: true });
+      get().runRecurring();
     } catch (e) {
       console.warn('FinQuest: could not open the database', e);
       set({ ready: true });
@@ -89,6 +98,35 @@ export const useStore = create<State>()((set, get) => ({
     persist(repo.putBudget({ categoryId, amount }));
   },
 
+  saveRecurring: (input) => {
+    const existing = input.id ? get().recurring.find((r) => r.id === input.id) : undefined;
+    // An edited rule keeps its place: only occurrences after today follow the new schedule.
+    const rule: RecurringRule = { ...input, id: existing?.id ?? newId(), lastRunDate: existing?.lastRunDate ?? null };
+    set((s) => ({ recurring: existing ? s.recurring.map((r) => (r.id === rule.id ? rule : r)) : [...s.recurring, rule] }));
+    persist(repo.putRecurring(rule));
+    get().runRecurring();
+  },
+
+  deleteRecurring: (id) => {
+    set((s) => ({ recurring: s.recurring.filter((r) => r.id !== id) }));
+    persist(repo.removeRecurring(id));
+  },
+
+  runRecurring: () => {
+    const { transactions, updatedRules } = materialize(get().recurring, today());
+    if (updatedRules.length === 0) return;
+    const updated = new Map(updatedRules.map((r) => [r.id, r]));
+    set((s) => {
+      const known = new Set(s.transactions.map((t) => t.id));
+      const fresh = transactions.filter((t) => !known.has(t.id));
+      return {
+        recurring: s.recurring.map((r) => updated.get(r.id) ?? r),
+        transactions: fresh.length ? [...s.transactions, ...fresh].sort(newestFirst) : s.transactions,
+      };
+    });
+    persist(repo.applyRecurringRun(transactions, updatedRules));
+  },
+
   updateSettings: (patch) => {
     const settings = { ...get().settings, ...patch };
     set({ settings });
@@ -104,7 +142,12 @@ export const useStore = create<State>()((set, get) => ({
 
   eraseAll: () => {
     const settings = { ...DEFAULT_SETTINGS, onboarded: true, currency: get().settings.currency, theme: get().settings.theme };
-    set({ transactions: [], goals: [], budgets: [], settings });
-    persist(repo.replaceData({ transactions: [], goals: [], budgets: [] }).then(() => repo.putSettings(settings)));
+    set({ transactions: [], goals: [], budgets: [], recurring: [], settings });
+    persist(
+      repo
+        .replaceData({ transactions: [], goals: [], budgets: [] })
+        .then(() => repo.clearRecurring())
+        .then(() => repo.putSettings(settings)),
+    );
   },
 }));

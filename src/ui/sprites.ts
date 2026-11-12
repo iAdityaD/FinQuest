@@ -33,5 +33,6 @@ export const SPRITES: Record<string, string[]> = {
   wallet: ['..........', '.aaaaaaaa.', 'aa......aa', 'aaaaaaaaaa', 'aaaa..aaaa', 'aaaa..aaaa', 'aaaaaaaaaa', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........'],
   menu: ['..........', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........'],
   gear: ['....aa....', '.aa.aa.aa.', '.aaaaaaaa.', '..aa..aa..', 'aaa....aaa', 'aaa....aaa', '..aa..aa..', '.aaaaaaaa.', '.aa.aa.aa.', '....aa....'],
+  repeat: ['...aaaa.a.', '..aa...aaa', '.aa...aaaa', '.aa.......', '.aa.......', '.......aa.', '.......aa.', 'aaaa...aa.', 'aaa...aa..', '.a.aaaa...'],
   plus: ['..........', '....aa....', '....aa....', '....aa....', '.aaaaaaaa.', '.aaaaaaaa.', '....aa....', '....aa....', '....aa....', '..........'],
 };
