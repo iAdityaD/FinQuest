@@ -69,3 +69,27 @@ export function relativeLabel(s: ISODate, now: ISODate) {
 
 export const isValidDate = (y: number, m: number, d: number) =>
   m >= 1 && m <= 12 && d >= 1 && d <= daysInMonth(y, m);
+
+/** Keeps a month-start setting usable: whole days from 1 to 28, so every month has one. */
+export const clampStartDay = (day: number | undefined) => Math.min(28, Math.max(1, Math.floor(day || 1)));
+
+/**
+ * The budgeting month a date belongs to, for people whose month starts on
+ * pay day rather than the 1st. startDay 25 on Nov 11 gives Oct 25 - Nov 24.
+ */
+export function cycleFor(date: ISODate, startDay = 1): { start: ISODate; end: ISODate } {
+  const day = clampStartDay(startDay);
+  const { y, m, d } = parts(date);
+  const thisStart = iso(y, m, day);
+  const start = d >= day ? thisStart : addMonths(thisStart, -1);
+  return { start, end: addDays(addMonths(start, 1), -1) };
+}
+
+/** "Nov 2026" for calendar months, "Oct 25 - Nov 24" when the month starts on another day. */
+export function formatCycle(date: ISODate, startDay = 1) {
+  if (clampStartDay(startDay) === 1) return formatMonth(date);
+  const { start, end } = cycleFor(date, startDay);
+  const a = parts(start);
+  const b = parts(end);
+  return `${monthShort(a.m)} ${a.d} - ${monthShort(b.m)} ${b.d}`;
+}

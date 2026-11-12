@@ -1,13 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { byCategory, filterByPeriod, periodLabel, shiftPeriod, summarize } from '../../src/domain/analytics';
-import type { Period } from '../../src/domain/analytics';
 import { categoriesFor } from '../../src/domain/categories';
-import { today } from '../../src/domain/dates';
 import { parseAmount, toInput } from '../../src/domain/money';
 import { OVERALL } from '../../src/domain/types';
 import { useStore } from '../../src/store/useStore';
-import { useMoney } from '../../src/ui/hooks';
+import { useMoney, usePeriod } from '../../src/ui/hooks';
 import { AmountPrompt, Button, Panel, ProgressBar, Screen, Stepper, Txt } from '../../src/ui/kit';
 import { Sprite } from '../../src/ui/Sprite';
 import { useTheme } from '../../src/ui/theme';
@@ -21,7 +19,7 @@ export default function BudgetScreen() {
   const budgets = useStore((s) => s.budgets);
   const currency = useStore((s) => s.settings.currency);
   const setBudget = useStore((s) => s.setBudget);
-  const [period, setPeriod] = useState<Period>({ kind: 'month', anchor: today() });
+  const [period, setPeriod] = usePeriod();
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
 
   const { spentTotal, spentBy } = useMemo(() => {

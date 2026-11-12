@@ -19,12 +19,13 @@ export default function Goals() {
   const fmt = useMoney();
   const goals = useStore((s) => s.goals);
   const saveRule = useStore((s) => s.settings.saveRule);
+  const startDay = useStore((s) => s.settings.monthStartDay);
   const savingsTarget = useStore((s) => s.settings.monthlySavingsTarget);
   const currency = useStore((s) => s.settings.currency);
   const contributeToGoal = useStore((s) => s.contributeToGoal);
   const [funding, setFunding] = useState<Goal | null>(null);
   const now = today();
-  const need = monthlyGoalNeed(goals, now, saveRule);
+  const need = monthlyGoalNeed(goals, now, saveRule, startDay);
 
   const schedule = (p: GoalProgress) => {
     if (p.status === 'done') return 'Goal reached. Well done!';
@@ -58,7 +59,7 @@ export default function Goals() {
       ) : null}
 
       {goals.map((goal) => {
-        const p = goalProgress(goal, now, saveRule);
+        const p = goalProgress(goal, now, saveRule, startDay);
         const color = p.status === 'done' ? t.good : p.status === 'overdue' ? t.bad : t.accent;
         return (
           <Panel key={goal.id} style={{ gap: 8 }}>

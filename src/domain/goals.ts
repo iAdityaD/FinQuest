@@ -1,19 +1,20 @@
-import { addMonths, diffDays, endOfMonth, parts, startOfMonth } from './dates';
+import { addDays, addMonths, cycleFor, diffDays } from './dates';
 import type { Goal, ISODate, SaveRule } from './types';
 
 /**
  * Dates on which money should be moved towards a goal, from today up to the target date.
- * 'start' -> the 1st of each month, 'end' -> the last day of each month.
+ * 'start' -> the first day of each budgeting month, 'end' -> its last day.
+ * The budgeting month starts on `startDay` (the 1st unless the user is paid on another day).
  */
-export function contributionDates(today: ISODate, target: ISODate, rule: SaveRule): ISODate[] {
+export function contributionDates(today: ISODate, target: ISODate, rule: SaveRule, startDay = 1): ISODate[] {
   const out: ISODate[] = [];
-  let cur: ISODate;
-  if (rule === 'start') cur = parts(today).d === 1 ? today : startOfMonth(addMonths(today, 1));
-  else cur = endOfMonth(today);
-  while (cur <= target && out.length < 1200) {
-    out.push(cur);
-    const nextMonth = addMonths(startOfMonth(cur), 1);
-    cur = rule === 'start' ? nextMonth : endOfMonth(nextMonth);
+  const cycle = cycleFor(today, startDay);
+  // First day of the cycle each contribution belongs to.
+  let start = rule === 'start' && cycle.start !== today ? addMonths(cycle.start, 1) : cycle.start;
+  for (; out.length < 1200; start = addMonths(start, 1)) {
+    const due = rule === 'start' ? start : addDays(addMonths(start, 1), -1);
+    if (due > target) break;
+    out.push(due);
   }
   return out;
 }
@@ -32,7 +33,7 @@ export interface GoalProgress {
   nextContribution: ISODate | null;
 }
 
-export function goalProgress(goal: Goal, today: ISODate, rule: SaveRule): GoalProgress {
+export function goalProgress(goal: Goal, today: ISODate, rule: SaveRule, startDay = 1): GoalProgress {
   const remaining = Math.max(0, goal.targetAmount - goal.savedAmount);
   const percent = goal.targetAmount > 0 ? Math.min(100, Math.floor((goal.savedAmount / goal.targetAmount) * 100)) : 0;
   const base = { percent, remaining, daysLeft: null, contributionsLeft: null, perMonth: null, perDay: null, nextContribution: null };
@@ -42,7 +43,7 @@ export function goalProgress(goal: Goal, today: ISODate, rule: SaveRule): GoalPr
   const daysLeft = diffDays(today, goal.targetDate);
   if (daysLeft < 0) return { ...base, status: 'overdue', daysLeft };
 
-  const dates = contributionDates(today, goal.targetDate, rule);
+  const dates = contributionDates(today, goal.targetDate, rule, startDay);
   // Target falls before the next contribution date: one final payment, due on the target date.
   const count = Math.max(1, dates.length);
   return {
@@ -58,6 +59,6 @@ export function goalProgress(goal: Goal, today: ISODate, rule: SaveRule): GoalPr
 }
 
 /** Total needed per month to keep every dated goal on schedule. */
-export function monthlyGoalNeed(goals: Goal[], today: ISODate, rule: SaveRule) {
-  return goals.reduce((sum, g) => sum + (goalProgress(g, today, rule).perMonth ?? 0), 0);
+export function monthlyGoalNeed(goals: Goal[], today: ISODate, rule: SaveRule, startDay = 1) {
+  return goals.reduce((sum, g) => sum + (goalProgress(g, today, rule, startDay).perMonth ?? 0), 0);
 }

@@ -1,10 +1,12 @@
-import { addDays, addMonths, daysInMonth, formatLong, formatMonth, iso, monthKey, monthShort, parts, weekdayShort, yearKey } from './dates';
+import { addDays, addMonths, clampStartDay, cycleFor, formatCycle, formatLong, iso, monthKey, monthShort, parts, weekdayShort, yearKey } from './dates';
 import type { ISODate, Transaction } from './types';
 
 export type PeriodKind = 'day' | 'month' | 'year';
 export interface Period {
   kind: PeriodKind;
   anchor: ISODate;
+  /** Month view only: the day the budgeting month starts on (1-28, default 1). */
+  startDay?: number;
 }
 
 export interface Summary {
@@ -16,7 +18,7 @@ export interface Summary {
 
 export function inPeriod(date: ISODate, p: Period) {
   if (p.kind === 'day') return date === p.anchor;
-  if (p.kind === 'month') return monthKey(date) === monthKey(p.anchor);
+  if (p.kind === 'month') return cycleFor(date, p.startDay).start === cycleFor(p.anchor, p.startDay).start;
   return yearKey(date) === yearKey(p.anchor);
 }
 
@@ -34,13 +36,17 @@ export function summarize(txs: Transaction[]): Summary {
 
 export function shiftPeriod(p: Period, delta: number): Period {
   if (p.kind === 'day') return { kind: 'day', anchor: addDays(p.anchor, delta) };
-  if (p.kind === 'month') return { kind: 'month', anchor: addMonths(p.anchor, delta) };
+  if (p.kind === 'month') {
+    // Shift from the cycle start so a late-month anchor cannot be clamped into the wrong cycle.
+    const from = clampStartDay(p.startDay) === 1 ? p.anchor : cycleFor(p.anchor, p.startDay).start;
+    return { ...p, anchor: addMonths(from, delta) };
+  }
   return { kind: 'year', anchor: addMonths(p.anchor, delta * 12) };
 }
 
 export function periodLabel(p: Period) {
   if (p.kind === 'day') return formatLong(p.anchor);
-  if (p.kind === 'month') return formatMonth(p.anchor);
+  if (p.kind === 'month') return formatCycle(p.anchor, p.startDay);
   return yearKey(p.anchor);
 }
 
@@ -84,8 +90,8 @@ export function series(txs: Transaction[], p: Period): SeriesPoint[] {
       points.push({ key: d, label: weekdayShort(d), income: 0, expense: 0 });
     }
   } else if (p.kind === 'month') {
-    const { y, m } = parts(p.anchor);
-    for (let d = 1; d <= daysInMonth(y, m); d++) points.push({ key: iso(y, m, d), label: String(d), income: 0, expense: 0 });
+    const { start, end } = cycleFor(p.anchor, p.startDay);
+    for (let d = start; d <= end; d = addDays(d, 1)) points.push({ key: d, label: String(parts(d).d), income: 0, expense: 0 });
   } else {
     const { y } = parts(p.anchor);
     for (let m = 1; m <= 12; m++) points.push({ key: iso(y, m, 1).slice(0, 7), label: monthShort(m), income: 0, expense: 0 });

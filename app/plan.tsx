@@ -1,14 +1,14 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { today } from '../src/domain/dates';
+import { clampStartDay, formatCycle, today } from '../src/domain/dates';
 import { monthlyGoalNeed } from '../src/domain/goals';
 import { parseAmount, toInput } from '../src/domain/money';
 import { computePlan } from '../src/domain/plan';
 import type { SaveRule } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
 import { useMoney } from '../src/ui/hooks';
-import { Button, Field, Panel, Screen, Segmented, Txt } from '../src/ui/kit';
+import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
 import { useTheme } from '../src/ui/theme';
 
 const RULE_HELP: Record<SaveRule, string> = {
@@ -29,15 +29,16 @@ export default function Plan() {
   const [incomeText, setIncomeText] = useState(toInput(settings.monthlyIncome, settings.currency));
   const [targetText, setTargetText] = useState(toInput(settings.monthlySavingsTarget, settings.currency));
   const [rule, setRule] = useState<SaveRule>(settings.saveRule);
+  const [startDay, setStartDay] = useState(clampStartDay(settings.monthStartDay));
 
   const monthlyIncome = parseAmount(incomeText, settings.currency);
   const monthlySavingsTarget = parseAmount(targetText, settings.currency);
-  const preview = computePlan({ transactions, today: now, monthlyIncome, monthlySavingsTarget, saveRule: rule });
-  const need = monthlyGoalNeed(goals, now, rule);
+  const preview = computePlan({ transactions, today: now, monthlyIncome, monthlySavingsTarget, saveRule: rule, monthStartDay: startDay });
+  const need = monthlyGoalNeed(goals, now, rule, startDay);
   const impossible = preview.configured && preview.spendable < 0;
 
   const save = () => {
-    updateSettings({ monthlyIncome, monthlySavingsTarget, saveRule: rule });
+    updateSettings({ monthlyIncome, monthlySavingsTarget, saveRule: rule, monthStartDay: startDay });
     router.back();
   };
 
@@ -57,6 +58,14 @@ export default function Plan() {
       <Txt v="small" dim>When do you set savings aside?</Txt>
       <Segmented value={rule} onChange={setRule} options={[{ value: 'start', label: 'Start of month' }, { value: 'end', label: 'End of month' }]} />
       <Txt v="small" dim>{RULE_HELP[rule]}</Txt>
+
+      <Txt v="small" dim>Your month starts on</Txt>
+      <Stepper label={`Day ${startDay}`} onPrev={() => setStartDay(startDay === 1 ? 28 : startDay - 1)} onNext={() => setStartDay(startDay === 28 ? 1 : startDay + 1)} />
+      <Txt v="small" dim>
+        {startDay === 1
+          ? 'Calendar months. Paid on another day? Set it here so budgets and your daily limit run from pay day to pay day.'
+          : `This month runs ${formatCycle(now, startDay)}. Budgets, analytics and your daily limit follow it.`}
+      </Txt>
 
       <Panel alt style={{ gap: 6 }}>
         <Txt v="h">Preview for today</Txt>

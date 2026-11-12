@@ -19,6 +19,7 @@ export default function GoalForm() {
   const existing = useStore((s) => s.goals.find((g) => g.id === params.id));
   const currency = useStore((s) => s.settings.currency);
   const saveRule = useStore((s) => s.settings.saveRule);
+  const startDay = useStore((s) => s.settings.monthStartDay);
   const saveGoal = useStore((s) => s.saveGoal);
   const deleteGoal = useStore((s) => s.deleteGoal);
   const now = today();
@@ -34,7 +35,7 @@ export default function GoalForm() {
   const savedAmount = parseAmount(savedText, currency);
   const targetDate = hasDate === 'yes' ? date : null;
   const valid = name.trim().length > 0 && targetAmount > 0;
-  const preview = goalProgress({ id: '', name, icon, targetAmount, savedAmount, targetDate, createdAt: 0 }, now, saveRule);
+  const preview = goalProgress({ id: '', name, icon, targetAmount, savedAmount, targetDate, createdAt: 0 }, now, saveRule, startDay);
 
   const save = () => {
     saveGoal({ id: existing?.id, name: name.trim(), icon, targetAmount, savedAmount, targetDate });

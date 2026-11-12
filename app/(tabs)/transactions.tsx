@@ -2,12 +2,11 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { filterByPeriod, groupByDay, periodLabel, shiftPeriod } from '../../src/domain/analytics';
-import type { Period } from '../../src/domain/analytics';
 import { getCategory } from '../../src/domain/categories';
 import { relativeLabel, today } from '../../src/domain/dates';
 import type { Transaction } from '../../src/domain/types';
 import { useStore } from '../../src/store/useStore';
-import { useMoney } from '../../src/ui/hooks';
+import { useMoney, usePeriod } from '../../src/ui/hooks';
 import { Button, Field, Panel, Row, Screen, Segmented, Stepper, Txt } from '../../src/ui/kit';
 import { useTheme } from '../../src/ui/theme';
 
@@ -20,7 +19,7 @@ export default function Transactions() {
   const transactions = useStore((s) => s.transactions);
   const deleteTransaction = useStore((s) => s.deleteTransaction);
   const now = today();
-  const [period, setPeriod] = useState<Period>({ kind: 'month', anchor: now });
+  const [period, setPeriod] = usePeriod();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
 

@@ -1,7 +1,7 @@
 import { byCategory, filterByPeriod, inPeriod, series, shiftPeriod, summarize } from './analytics';
 import type { Period } from './analytics';
 import { getCategory } from './categories';
-import { formatLong, monthKey } from './dates';
+import { formatLong } from './dates';
 import { goalProgress } from './goals';
 import type { PlanResult } from './plan';
 import { OVERALL } from './types';
@@ -24,6 +24,7 @@ export interface InsightInput {
   plan: PlanResult;
   savingsTarget: number;
   saveRule: SaveRule;
+  monthStartDay?: number;
   fmt: (minor: number) => string;
 }
 
@@ -37,7 +38,7 @@ export function buildInsights(input: InsightInput): Insight[] {
   const current = filterByPeriod(transactions, period);
   const sum = summarize(current);
   const noun = NOUN[period.kind];
-  const isCurrentMonth = period.kind === 'month' && monthKey(period.anchor) === monthKey(today);
+  const isCurrentMonth = period.kind === 'month' && inPeriod(today, period);
 
   if (sum.count === 0) {
     return [{ id: 'empty', tone: 'info', title: 'Nothing logged yet', body: `Add a transaction to see guidance for this ${noun}.` }];
@@ -108,7 +109,7 @@ export function buildInsights(input: InsightInput): Insight[] {
 
   // Goals behind schedule
   for (const g of goals) {
-    const p = goalProgress(g, today, saveRule);
+    const p = goalProgress(g, today, saveRule, input.monthStartDay);
     if (p.status === 'overdue') out.push({ id: `goal-${g.id}`, tone: 'warn', title: `${g.name} passed its target date`, body: `${fmt(p.remaining)} still to go. Move the date or add to it.` });
   }
 

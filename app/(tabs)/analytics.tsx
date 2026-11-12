@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { byCategory, filterByPeriod, periodLabel, series, shiftPeriod, summarize } from '../../src/domain/analytics';
-import type { Period, PeriodKind } from '../../src/domain/analytics';
+import type { PeriodKind } from '../../src/domain/analytics';
 import { getCategory } from '../../src/domain/categories';
 import { today } from '../../src/domain/dates';
 import { buildInsights } from '../../src/domain/insights';
 import { useStore } from '../../src/store/useStore';
 import { Bars, Legend, PixelDonut } from '../../src/ui/charts';
-import { useMoney, usePlan } from '../../src/ui/hooks';
+import { useMoney, usePeriod, usePlan } from '../../src/ui/hooks';
 import { Panel, Screen, Segmented, Stepper, Txt } from '../../src/ui/kit';
 import { useTheme } from '../../src/ui/theme';
 
@@ -22,8 +22,9 @@ export default function Analytics() {
   const goals = useStore((s) => s.goals);
   const savingsTarget = useStore((s) => s.settings.monthlySavingsTarget);
   const saveRule = useStore((s) => s.settings.saveRule);
+  const monthStartDay = useStore((s) => s.settings.monthStartDay);
   const now = today();
-  const [period, setPeriod] = useState<Period>({ kind: 'month', anchor: now });
+  const [period, setPeriod] = usePeriod();
 
   const data = useMemo(() => {
     const current = filterByPeriod(transactions, period);
@@ -32,9 +33,9 @@ export default function Analytics() {
       categories: byCategory(current),
       // The day view charts the surrounding week, so it needs the full list.
       trend: series(period.kind === 'day' ? transactions : current, period),
-      insights: buildInsights({ transactions, budgets, goals, period, today: now, plan, savingsTarget, saveRule, fmt }),
+      insights: buildInsights({ transactions, budgets, goals, period, today: now, plan, savingsTarget, saveRule, monthStartDay, fmt }),
     };
-  }, [transactions, budgets, goals, period, now, plan, savingsTarget, saveRule, fmt]);
+  }, [transactions, budgets, goals, period, now, plan, savingsTarget, saveRule, monthStartDay, fmt]);
 
   const toneColor = { good: t.good, warn: t.bad, info: t.info };
   const top = data.categories.slice(0, 6);

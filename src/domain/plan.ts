@@ -1,5 +1,5 @@
 import { summarize } from './analytics';
-import { diffDays, endOfMonth, monthKey, parts } from './dates';
+import { cycleFor, diffDays } from './dates';
 import type { ISODate, SaveRule, Transaction } from './types';
 
 export interface PlanInput {
@@ -8,6 +8,8 @@ export interface PlanInput {
   monthlyIncome: number; // planned
   monthlySavingsTarget: number;
   saveRule: SaveRule;
+  /** Day the budgeting month starts on (1-28). Defaults to the 1st. */
+  monthStartDay?: number;
 }
 
 export interface PlanResult {
@@ -35,7 +37,8 @@ export interface PlanResult {
  */
 export function computePlan(input: PlanInput): PlanResult {
   const { transactions, today, monthlyIncome, monthlySavingsTarget, saveRule } = input;
-  const month = transactions.filter((t) => monthKey(t.date) === monthKey(today) && t.date <= today);
+  const cycle = cycleFor(today, input.monthStartDay);
+  const month = transactions.filter((t) => t.date >= cycle.start && t.date <= today);
   const { income: actualIncome, expense: spentSoFar } = summarize(month);
   const spentToday = summarize(month.filter((t) => t.date === today)).expense;
 
@@ -44,11 +47,11 @@ export function computePlan(input: PlanInput): PlanResult {
   const incomeBasis = saveRule === 'start' ? Math.max(monthlyIncome, actualIncome) : actualIncome || monthlyIncome;
 
   const spendable = incomeBasis - monthlySavingsTarget;
-  const daysLeft = diffDays(today, endOfMonth(today)) + 1;
+  const daysLeft = diffDays(today, cycle.end) + 1;
   const spentBeforeToday = spentSoFar - spentToday;
   const dailyAllowance = Math.max(0, Math.floor((spendable - spentBeforeToday) / daysLeft));
 
-  const dayOfMonth = parts(today).d;
+  const dayOfMonth = diffDays(cycle.start, today) + 1;
   const avgPerDay = spentSoFar / dayOfMonth;
   const projectedSavings = Math.round(incomeBasis - spentSoFar - avgPerDay * (daysLeft - 1));
 

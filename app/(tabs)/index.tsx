@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { filterByPeriod, summarize } from '../../src/domain/analytics';
 import { getCategory } from '../../src/domain/categories';
-import { formatMonth, relativeLabel, today } from '../../src/domain/dates';
+import { formatCycle, relativeLabel, today } from '../../src/domain/dates';
 import { dailyQuests, levelFor, streak, totalXp } from '../../src/domain/game';
 import { useStore } from '../../src/store/useStore';
 import { Coin3D } from '../../src/ui/Coin3D';
@@ -22,9 +22,10 @@ export default function Home() {
   const goals = useStore((s) => s.goals);
   const budgets = useStore((s) => s.budgets);
   const savingsTarget = useStore((s) => s.settings.monthlySavingsTarget);
+  const startDay = useStore((s) => s.settings.monthStartDay);
   const now = today();
 
-  const month = useMemo(() => summarize(filterByPeriod(transactions, { kind: 'month', anchor: now })), [transactions, now]);
+  const month = useMemo(() => summarize(filterByPeriod(transactions, { kind: 'month', anchor: now, startDay })), [transactions, now, startDay]);
   const balance = useMemo(() => summarize(transactions).net, [transactions]);
   const level = useMemo(() => levelFor(totalXp(transactions, goals, budgets, now)), [transactions, goals, budgets, now]);
   const days = useMemo(() => streak(transactions, now), [transactions, now]);
@@ -37,7 +38,7 @@ export default function Home() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ flex: 1 }}>
           <Txt v="title">Home</Txt>
-          <Txt v="small" dim>{formatMonth(now)}</Txt>
+          <Txt v="small" dim>{formatCycle(now, startDay)}</Txt>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Sprite name="flame" size={20} />
