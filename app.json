@@ -31,6 +31,14 @@
           "resizeMode": "contain",
           "backgroundColor": "#0f0b1e"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "# expo-gl creates GLView by reflection and ships no keep rule; R8 strips its constructor and the app crashes on launch.\n-keep class expo.modules.gl.** { *; }"
+          }
+        }
       ]
     ]
   }

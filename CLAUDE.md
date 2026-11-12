@@ -17,11 +17,13 @@ The owner's design reference is a dark pixel-art UI (night sky, chunky bordered 
 - **Written but not verified on a device:** recurring transactions (2a), custom categories (2b) and custom month start day (2c). All three have unit tests (26 tests pass in total) and type-check, and the Repeat option renders on the form, but no rule or category has been saved on a device. Migrations 2 and 3 have never run on a device.
 - Setup changes made to get there: TypeScript `~6.0.3` and `@types/react` `~19.3.0` (what SDK 58 expects), `react-dom` pinned to 19.3.0 through `overrides` (19.3.1 demands a newer React than Expo pins and breaks `npm install`), `@types/node` added for the test files, the splash config moved from `expo.splash` to the `expo-splash-screen` plugin, `baseUrl` dropped from `tsconfig.json` (deprecated in TypeScript 6). `expo-doctor` passes 20/20.
 - Readability changes asked for by the owner: the font is now Jersey 25 everywhere (pixel look, clear digits). Pixelify Sans was dropped because its 2, 3, 7, 8 and 9 were too alike to read amounts. Jersey 25 has one weight, so emphasis comes from size and colour, not bold. The donut is drawn on a 91-cell grid snapped to device pixels.
-- The APK build on GitHub Actions (run 43009969619) was never read: `gh` was not available. Check it before relying on the manual workflow.
+- **Release APK on a real phone (same day):** a release build (arm64) was installed on a Samsung Galaxy M33, Android 16. It opens, and Home shows demo data, the 3D coin and the Jersey 25 font. The first release APK crashed on launch: R8 (on by default in SDK 58 release builds) stripped the constructor of `expo.modules.gl.GLView`, which expo-gl creates by reflection without shipping a keep rule. Fixed with `extraProguardRules` through the `expo-build-properties` plugin in `app.json`. Debug builds do not shrink code, so only a release build shows this class of bug: test release builds before shipping.
+- The APK build on GitHub Actions (run 43009969619) was never read: `gh` was not available. Check it before relying on the manual workflow. It predates the keep rule, so that APK would crash on launch.
 
 ### Building on Windows (found the hard way)
 
 - **A space in the user name breaks the native link step.** With the SDK under `C:\Users\First Last\...`, CMake calls the compiler by its 8.3 short name (`CLANG_~1.EXE`), clang then links as C and every C++ library fails with undefined `std::__ndk1` symbols. Fix: point `ANDROID_HOME` and `sdk.dir` at a path without spaces (a junction such as `C:\Android\Sdk` to the real SDK is enough).
+- **Release builds hit the path limit even from `C:q`** (`RelWithDebInfo` and `arm64-v8a` are longer than `Debug` and `x86_64`). Add `externalNativeBuild { cmake { buildStagingDirectory "C:/b" } }` to the `android` block of the generated `android/app/build.gradle`; `expo prebuild` wipes it and `local.properties`, so re-apply both after every prebuild.
 - **The 260-character path limit breaks react-native-reanimated.** From a deep project folder, ninja fails with `mkdir ... No such file or directory`. A `subst` drive does not help (Expo autolinking resolves it back to the real path). Build from a short real path instead, e.g. mirror the project to `C:\fq` and run Gradle there; Metro can still serve JS from the normal folder.
 - **Port 8081 may be taken** (Apache on the owner's machine). The app then shows "Unable to load script". Run `npx expo start --port 8082`, `adb reverse tcp:8082 tcp:8082`, and set the dev server host in the app's dev menu to `localhost:8082`.
 - **8 GB of RAM is not enough for Gradle and the emulator together.** Close the emulator while building, and stop the Gradle daemon (`gradlew --stop`) before testing. A phone over USB is far lighter than the emulator.
@@ -51,7 +53,7 @@ Do these in order. Do not start feature work until the app opens and the checkli
 - [ ] Settings: all three themes render legibly; currency change relabels amounts; erase data works.
 - [ ] More > Export CSV opens the share sheet.
 - [ ] The 3D coin spins and speeds up on tap. If it does not render, see "Known risk points".
-- [ ] The pixel font (Jersey 25) is applied to all text and amounts are easy to read. The rupee sign may fall back to the system font; that is acceptable.
+- [x] The pixel font (Jersey 25) is applied to all text and amounts are easy to read. The rupee sign may fall back to the system font; that is acceptable.
 
 ### Known risk points (check these first when something breaks)
 
