@@ -9,7 +9,7 @@ import { useStore } from '../src/store/useStore';
 import { useCategories } from '../src/ui/hooks';
 import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
 import { Sprite } from '../src/ui/Sprite';
-import { useTheme } from '../src/ui/theme';
+import { FONT, useTheme } from '../src/ui/theme';
 
 export default function TransactionForm() {
   const t = useTheme();
@@ -90,7 +90,7 @@ export default function TransactionForm() {
       />
 
       <Panel style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-        <Txt v="num" color={color} style={{ fontSize: 34 }}>{CURRENCIES[currency].symbol}</Txt>
+        <Txt v="num" color={color} style={{ fontSize: 40 }}>{CURRENCIES[currency].symbol}</Txt>
         <TextInput
           value={amountText}
           onChangeText={setAmountText}
@@ -99,7 +99,7 @@ export default function TransactionForm() {
           placeholderTextColor={t.dim}
           autoFocus={!existing}
           accessibilityLabel="Amount"
-          style={{ fontWeight: '800', fontSize: 34, color: t.text, minWidth: 90, minHeight: 60, textAlign: 'center' }}
+          style={{ fontFamily: FONT, fontSize: 40, color: t.text, minWidth: 90, minHeight: 60, textAlign: 'center' }}
         />
       </Panel>
 
@@ -120,7 +120,7 @@ export default function TransactionForm() {
               }}
             >
               <Sprite name={cat.sprite} size={30} />
-              <Txt v="small" numberOfLines={1} color={active ? t.accent : t.text} style={{ fontSize: 10 }}>{cat.name}</Txt>
+              <Txt v="small" numberOfLines={1} color={active ? t.accent : t.text} style={{ fontSize: 13 }}>{cat.name}</Txt>
             </Pressable>
           );
         })}

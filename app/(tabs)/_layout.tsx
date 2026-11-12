@@ -2,7 +2,7 @@ import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 import { useStore } from '../../src/store/useStore';
 import { Sprite } from '../../src/ui/Sprite';
-import { useTheme } from '../../src/ui/theme';
+import { FONT, useTheme } from '../../src/ui/theme';
 
 const TABS = [
   { name: 'index', title: 'Home', sprite: 'home' },
@@ -24,7 +24,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: t.accent,
         tabBarInactiveTintColor: t.dim,
         tabBarStyle: { backgroundColor: t.panel, borderTopColor: t.border, borderTopWidth: 2 },
-        tabBarLabelStyle: { fontWeight: '700', fontSize: 10 },
+        tabBarLabelStyle: { fontFamily: FONT, fontSize: 13 },
       }}
     >
       {TABS.map((tab) => (

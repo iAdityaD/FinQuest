@@ -53,7 +53,7 @@ export default function Analytics() {
         {([['Income', data.summary.income, t.good], ['Spent', data.summary.expense, t.bad], ['Net', data.summary.net, data.summary.net < 0 ? t.bad : t.text]] as const).map(([label, value, color]) => (
           <Panel key={label} style={{ flex: 1, padding: 8 }}>
             <Txt v="small" dim>{label}</Txt>
-            <Txt v="h" color={color} numberOfLines={1} style={{ fontSize: 14 }}>{fmt(value)}</Txt>
+            <Txt v="h" color={color} numberOfLines={1} style={{ fontSize: 18 }}>{fmt(value)}</Txt>
           </Panel>
         ))}
       </View>
@@ -63,7 +63,7 @@ export default function Analytics() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <PixelDonut size={140} slices={data.categories.map((c) => ({ share: c.share, color: getCategory(c.categoryId).color }))}>
             <Txt v="small" dim>Spent</Txt>
-            <Txt v="h" style={{ fontSize: 13 }}>{fmt(data.summary.expense)}</Txt>
+            <Txt v="h" style={{ fontSize: 17 }}>{fmt(data.summary.expense)}</Txt>
           </PixelDonut>
           {top.length ? (
             <Legend items={top.map((c) => ({ label: getCategory(c.categoryId).name, color: getCategory(c.categoryId).color, value: `${Math.round(c.share * 100)}%` }))} />

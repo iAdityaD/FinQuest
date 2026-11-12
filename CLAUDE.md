@@ -16,7 +16,7 @@ The owner's design reference is a dark pixel-art UI (night sky, chunky bordered 
 - **Not yet walked on a device:** the rest of the smoke checklist below (unticked boxes), plus the Phase 2 work listed next. The emulator ran out of memory on the 8 GB build machine before the checklist was finished.
 - **Written but not verified on a device:** recurring transactions (2a), custom categories (2b) and custom month start day (2c). All three have unit tests (26 tests pass in total) and type-check, and the Repeat option renders on the form, but no rule or category has been saved on a device. Migrations 2 and 3 have never run on a device.
 - Setup changes made to get there: TypeScript `~6.0.3` and `@types/react` `~19.3.0` (what SDK 58 expects), `react-dom` pinned to 19.3.0 through `overrides` (19.3.1 demands a newer React than Expo pins and breaks `npm install`), `@types/node` added for the test files, the splash config moved from `expo.splash` to the `expo-splash-screen` plugin, `baseUrl` dropped from `tsconfig.json` (deprecated in TypeScript 6). `expo-doctor` passes 20/20.
-- Readability change asked for by the owner: the pixel font is now used for screen titles only. Its digits (2, 3, 7, 8, 9) were too alike to read amounts, so numbers, headings and body text use the system font. The donut is drawn on a 91-cell grid snapped to device pixels.
+- Readability changes asked for by the owner: the font is now Jersey 25 everywhere (pixel look, clear digits). Pixelify Sans was dropped because its 2, 3, 7, 8 and 9 were too alike to read amounts. Jersey 25 has one weight, so emphasis comes from size and colour, not bold. The donut is drawn on a 91-cell grid snapped to device pixels.
 - The APK build on GitHub Actions (run 43009969619) was never read: `gh` was not available. Check it before relying on the manual workflow.
 
 ### Building on Windows (found the hard way)
@@ -51,7 +51,7 @@ Do these in order. Do not start feature work until the app opens and the checkli
 - [ ] Settings: all three themes render legibly; currency change relabels amounts; erase data works.
 - [ ] More > Export CSV opens the share sheet.
 - [ ] The 3D coin spins and speeds up on tap. If it does not render, see "Known risk points".
-- [x] The pixel font is applied to screen titles (blocky). Amounts and body text use the system font on purpose.
+- [ ] The pixel font (Jersey 25) is applied to all text and amounts are easy to read. The rupee sign may fall back to the system font; that is acceptable.
 
 ### Known risk points (check these first when something breaks)
 
@@ -59,7 +59,7 @@ Do these in order. Do not start feature work until the app opens and the checkli
 | --- | --- | --- |
 | Routing | `app/_layout.tsx`, `app/(tabs)/_layout.tsx` | expo-router's navigation core was reworked in SDK 58. `Stack`, `Tabs`, `Redirect`, `contentStyle` and the `tabBar*` options were written from pre-58 knowledge. Check the SDK 58 migration guide. |
 | 3D coin | `src/ui/Coin3D.tsx` | three.js `WebGLRenderer` on an `expo-gl` context through a fake canvas object. May need extra canvas fields or a different three version. It already falls back to a sprite on error; keep that fallback. |
-| Fonts | `app/_layout.tsx` | `@expo-google-fonts/pixelify-sans` is pinned loosely (`>=0.2.3`); confirm the export names `PixelifySans_400Regular` and `PixelifySans_700Bold`. |
+| Fonts | `app/_layout.tsx`, `src/ui/theme.ts` | One font, `Jersey25_400Regular` from `@expo-google-fonts/jersey-25`. If it fails to load the app still opens with system fonts. |
 | SQLite | `src/data/db.ts`, `src/data/repo.ts` | Uses the async API (`openDatabaseAsync`, `runAsync`, `getAllAsync`, `withTransactionAsync`). Confirm against the SDK 58 docs. |
 | Keyboard | `src/ui/kit.tsx` (`Screen`, `AmountPrompt`) | `KeyboardAvoidingView` behaviour on Android is a guess. |
 | Layout | `src/ui/kit.tsx` (`Button`) | Pressed state swaps border width for margin to fake a "push"; check it does not jitter. |

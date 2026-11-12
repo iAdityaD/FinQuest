@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo-google-fonts/pixelify-sans": ">=0.2.3",
+    "@expo-google-fonts/jersey-25": "^0.4.1",
     "expo": "^58.0.0",
     "expo-constants": "~58.0.15",
     "expo-font": "~58.0.11",

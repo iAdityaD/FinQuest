@@ -1,4 +1,4 @@
-import { PixelifySans_400Regular, PixelifySans_700Bold } from '@expo-google-fonts/pixelify-sans';
+import { Jersey25_400Regular } from '@expo-google-fonts/jersey-25';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,7 +11,7 @@ import { useTheme } from '../src/ui/theme';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({ PixelifySans_400Regular, PixelifySans_700Bold });
+  const [fontsLoaded, fontError] = useFonts({ Jersey25_400Regular });
   const ready = useStore((s) => s.ready);
   const hydrate = useStore((s) => s.hydrate);
   const themeName = useStore((s) => s.settings.theme);

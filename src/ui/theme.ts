@@ -44,7 +44,7 @@ export const THEMES: Record<ThemeName, Theme> = {
   },
 };
 
-export const FONT = 'PixelifySans_400Regular';
-export const FONT_BOLD = 'PixelifySans_700Bold';
+// Jersey 25: a pixel face whose digits stay distinct at text sizes. It has one weight, so emphasis comes from size and colour.
+export const FONT = 'Jersey25_400Regular';
 
 export const useTheme = (): Theme => THEMES[useStore((s) => s.settings.theme)] ?? THEMES.dark;

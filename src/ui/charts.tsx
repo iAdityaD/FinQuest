@@ -91,7 +91,7 @@ export function Bars({ points, height = 120 }: { points: SeriesPoint[]; height?:
         {points.map((p, i) => (
           <View key={p.key} style={{ flex: 1, alignItems: 'center', overflow: 'visible' }}>
             {i % labelEvery === 0 ? (
-              <Txt v="small" dim numberOfLines={1} style={{ fontSize: 10, width: 30, textAlign: 'center' }}>{p.label}</Txt>
+              <Txt v="small" dim numberOfLines={1} style={{ fontSize: 13, width: 30, textAlign: 'center' }}>{p.label}</Txt>
             ) : null}
           </View>
         ))}
