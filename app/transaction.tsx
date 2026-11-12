@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Pressable, TextInput, View } from 'react-native';
-import { categoriesFor } from '../src/domain/categories';
 import { addDays, addMonths, formatLong, relativeLabel, today } from '../src/domain/dates';
 import { CURRENCIES, parseAmount, toInput } from '../src/domain/money';
 import { describeRule } from '../src/domain/recurring';
 import type { Frequency, TxType } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
+import { useCategories } from '../src/ui/hooks';
 import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
 import { Sprite } from '../src/ui/Sprite';
 import { useTheme } from '../src/ui/theme';
@@ -25,6 +25,9 @@ export default function TransactionForm() {
   const deleteRecurring = useStore((s) => s.deleteRecurring);
   const now = today();
   const source = existing ?? rule;
+  // An archived category stays selectable while editing the entry that already uses it.
+  const { forType } = useCategories();
+  const categoriesFor = (kind: TxType) => forType(kind, source?.categoryId);
 
   const [type, setType] = useState<TxType>(source?.type ?? (params.type === 'income' ? 'income' : 'expense'));
   const [amountText, setAmountText] = useState(source ? toInput(source.amount, currency) : '');

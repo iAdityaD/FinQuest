@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import * as repo from '../data/repo';
+import { CATEGORIES, moveCategory as moveCategoryIn, nextSort } from '../domain/categories';
+import type { Category } from '../domain/categories';
 import { today } from '../domain/dates';
 import { demoData } from '../domain/demo';
 import { materialize } from '../domain/recurring';
@@ -9,6 +11,7 @@ import type { Budget, Goal, RecurringRule, Settings, Transaction } from '../doma
 export type TransactionInput = Omit<Transaction, 'id' | 'createdAt'> & { id?: string };
 export type GoalInput = Omit<Goal, 'id' | 'createdAt'> & { id?: string };
 export type RecurringInput = Omit<RecurringRule, 'id' | 'lastRunDate'> & { id?: string };
+export type CategoryInput = Pick<Category, 'name' | 'sprite' | 'color' | 'type'> & { id?: string; archived?: boolean };
 
 interface State {
   ready: boolean;
@@ -16,6 +19,8 @@ interface State {
   goals: Goal[];
   budgets: Budget[];
   recurring: RecurringRule[];
+  /** Every category, archived ones included. Starts as the built-in list until the database answers. */
+  categories: Category[];
   settings: Settings;
   hydrate: () => Promise<void>;
   saveTransaction: (input: TransactionInput) => void;
@@ -28,6 +33,9 @@ interface State {
   deleteRecurring: (id: string) => void;
   /** Logs every recurring occurrence that has come due. Safe to call as often as you like. */
   runRecurring: () => void;
+  /** Adds a category (no id) or changes an existing one, including archiving and restoring it. */
+  saveCategory: (input: CategoryInput) => void;
+  moveCategory: (id: string, direction: -1 | 1) => void;
   updateSettings: (patch: Partial<Settings>) => void;
   loadDemo: () => void;
   eraseAll: () => void;
@@ -47,6 +55,7 @@ export const useStore = create<State>()((set, get) => ({
   goals: [],
   budgets: [],
   recurring: [],
+  categories: CATEGORIES,
   settings: DEFAULT_SETTINGS,
 
   hydrate: async () => {
@@ -127,6 +136,24 @@ export const useStore = create<State>()((set, get) => ({
     persist(repo.applyRecurringRun(transactions, updatedRules));
   },
 
+  saveCategory: (input) => {
+    const all = get().categories;
+    const existing = input.id ? all.find((c) => c.id === input.id) : undefined;
+    const category: Category = existing
+      ? { ...existing, ...input, id: existing.id, type: existing.type }
+      : { ...input, id: `c-${newId()}`, sort: nextSort(all, input.type), archived: false };
+    set({ categories: existing ? all.map((c) => (c.id === category.id ? category : c)) : [...all, category] });
+    persist(repo.putCategories([category]));
+  },
+
+  moveCategory: (id, direction) => {
+    const changed = moveCategoryIn(get().categories, id, direction);
+    if (changed.length === 0) return;
+    const byId = new Map(changed.map((c) => [c.id, c]));
+    set((s) => ({ categories: s.categories.map((c) => byId.get(c.id) ?? c) }));
+    persist(repo.putCategories(changed));
+  },
+
   updateSettings: (patch) => {
     const settings = { ...get().settings, ...patch };
     set({ settings });
@@ -142,11 +169,12 @@ export const useStore = create<State>()((set, get) => ({
 
   eraseAll: () => {
     const settings = { ...DEFAULT_SETTINGS, onboarded: true, currency: get().settings.currency, theme: get().settings.theme };
-    set({ transactions: [], goals: [], budgets: [], recurring: [], settings });
+    set({ transactions: [], goals: [], budgets: [], recurring: [], categories: CATEGORIES, settings });
     persist(
       repo
         .replaceData({ transactions: [], goals: [], budgets: [] })
         .then(() => repo.clearRecurring())
+        .then(() => repo.resetCategories())
         .then(() => repo.putSettings(settings)),
     );
   },

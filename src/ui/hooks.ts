@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { Period, PeriodKind } from '../domain/analytics';
+import { categoriesFor, makeLookup } from '../domain/categories';
 import { today } from '../domain/dates';
+import type { TxType } from '../domain/types';
 import { formatMoney } from '../domain/money';
 import { computePlan } from '../domain/plan';
 import { useStore } from '../store/useStore';
@@ -34,4 +36,10 @@ export function usePeriod(initial: PeriodKind = 'month') {
   const [raw, setPeriod] = useState<Period>(() => ({ kind: initial, anchor: today() }));
   const period = useMemo<Period>(() => ({ ...raw, startDay }), [raw, startDay]);
   return [period, setPeriod] as const;
+}
+
+/** The user's categories with a lookup that falls back to "Other" for unknown ids. */
+export function useCategories() {
+  const all = useStore((s) => s.categories);
+  return useMemo(() => ({ all, get: makeLookup(all), forType: (type: TxType, keepId?: string) => categoriesFor(type, all, keepId) }), [all]);
 }

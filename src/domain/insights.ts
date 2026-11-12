@@ -1,6 +1,7 @@
 import { byCategory, filterByPeriod, inPeriod, series, shiftPeriod, summarize } from './analytics';
 import type { Period } from './analytics';
-import { getCategory } from './categories';
+import { getCategory as builtInCategory } from './categories';
+import type { CategoryLookup } from './categories';
 import { formatLong } from './dates';
 import { goalProgress } from './goals';
 import type { PlanResult } from './plan';
@@ -25,6 +26,8 @@ export interface InsightInput {
   savingsTarget: number;
   saveRule: SaveRule;
   monthStartDay?: number;
+  /** The user's categories. Defaults to the built-in list. */
+  getCategory?: CategoryLookup;
   fmt: (minor: number) => string;
 }
 
@@ -34,6 +37,7 @@ const NOUN = { day: 'day', month: 'month', year: 'year' } as const;
 /** Plain-language guidance for the selected period. Ordered by importance. */
 export function buildInsights(input: InsightInput): Insight[] {
   const { transactions, budgets, goals, period, today, plan, savingsTarget, saveRule, fmt } = input;
+  const getCategory = input.getCategory ?? builtInCategory;
   const out: Insight[] = [];
   const current = filterByPeriod(transactions, period);
   const sum = summarize(current);

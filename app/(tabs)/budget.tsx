@@ -1,20 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { byCategory, filterByPeriod, periodLabel, shiftPeriod, summarize } from '../../src/domain/analytics';
-import { categoriesFor } from '../../src/domain/categories';
 import { parseAmount, toInput } from '../../src/domain/money';
 import { OVERALL } from '../../src/domain/types';
 import { useStore } from '../../src/store/useStore';
-import { useMoney, usePeriod } from '../../src/ui/hooks';
+import { useCategories, useMoney, usePeriod } from '../../src/ui/hooks';
 import { AmountPrompt, Button, Panel, ProgressBar, Screen, Stepper, Txt } from '../../src/ui/kit';
 import { Sprite } from '../../src/ui/Sprite';
 import { useTheme } from '../../src/ui/theme';
 
-const EXPENSE_CATEGORIES = categoriesFor('expense');
-
 export default function BudgetScreen() {
   const t = useTheme();
   const fmt = useMoney();
+  const expenseCategories = useCategories().forType('expense');
   const transactions = useStore((s) => s.transactions);
   const budgets = useStore((s) => s.budgets);
   const currency = useStore((s) => s.settings.currency);
@@ -58,7 +56,7 @@ export default function BudgetScreen() {
       </Panel>
 
       <Txt v="h">By category</Txt>
-      {EXPENSE_CATEGORIES.map((cat) => {
+      {expenseCategories.map((cat) => {
         const limit = limitOf(cat.id);
         const spent = spentBy.get(cat.id) ?? 0;
         const ratio = limit ? spent / limit : 0;

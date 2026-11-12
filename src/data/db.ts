@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { CATEGORIES } from '../domain/categories';
 
 /**
  * Everything is stored on the device in one SQLite file. Nothing leaves the phone.
@@ -68,5 +69,31 @@ async function open() {
       PRAGMA user_version = 2;
     `);
   }
+
+  if (version < 3) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        sprite TEXT NOT NULL,
+        color TEXT NOT NULL,
+        type TEXT NOT NULL,
+        sort INTEGER NOT NULL DEFAULT 0,
+        archived INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+    // Seeded with the ids the app has always used, so existing category_id values keep working.
+    await seedCategories(db);
+    await db.execAsync('PRAGMA user_version = 3;');
+  }
   return db;
+}
+
+/** Adds any built-in category that is missing. Never overwrites one the user has edited. */
+export async function seedCategories(db: SQLite.SQLiteDatabase) {
+  for (const c of CATEGORIES) {
+    await db.runAsync('INSERT OR IGNORE INTO categories (id, name, sprite, color, type, sort, archived) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+      c.id, c.name, c.sprite, c.color, c.type, c.sort, 0,
+    ]);
+  }
 }

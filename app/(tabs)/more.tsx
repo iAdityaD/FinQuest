@@ -3,6 +3,7 @@ import React from 'react';
 import { Alert, Share } from 'react-native';
 import { toCSV } from '../../src/domain/csv';
 import { useStore } from '../../src/store/useStore';
+import { useCategories } from '../../src/ui/hooks';
 import { Panel, Row, Screen, Txt } from '../../src/ui/kit';
 import { PixelScene } from '../../src/ui/PixelScene';
 import { Sprite } from '../../src/ui/Sprite';
@@ -15,6 +16,7 @@ export default function More() {
   const currency = useStore((s) => s.settings.currency);
   const goalCount = useStore((s) => s.goals.length);
   const repeatCount = useStore((s) => s.recurring.length);
+  const categories = useCategories();
   const arrow = <Txt v="h" color={t.accent}>{'>'}</Txt>;
 
   const exportCsv = async () => {
@@ -23,7 +25,7 @@ export default function More() {
       return;
     }
     try {
-      await Share.share({ title: 'finquest-transactions.csv', message: toCSV(transactions, currency) });
+      await Share.share({ title: 'finquest-transactions.csv', message: toCSV(transactions, currency, categories.get) });
     } catch {
       Alert.alert('Export failed', 'The share sheet could not be opened.');
     }
@@ -35,6 +37,7 @@ export default function More() {
         <Row sprite="target" title="Goals" subtitle={goalCount ? `${goalCount} active` : 'Save towards something'} right={arrow} onPress={() => router.push('/goals')} />
         <Row sprite="salary" title="Savings plan" subtitle="Monthly target and daily allowance" right={arrow} onPress={() => router.push('/plan')} />
         <Row sprite="repeat" title="Repeating" subtitle={repeatCount ? `${repeatCount} set up` : 'Rent, salary, subscriptions'} right={arrow} onPress={() => router.push('/recurring')} />
+        <Row sprite="shopping" title="Categories" subtitle="Add, rename, reorder, archive" right={arrow} onPress={() => router.push('/categories')} />
         <Row sprite="bills" title="Export CSV" subtitle={`${transactions.length} transactions`} right={arrow} onPress={exportCsv} />
         <Row sprite="gear" title="Settings" subtitle="Theme, currency, data" right={arrow} onPress={() => router.push('/settings')} />
       </Panel>

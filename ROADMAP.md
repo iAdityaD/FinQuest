@@ -7,7 +7,7 @@ Agents: read `CLAUDE.md` first for rules, commands and decisions already made.
 | --- | --- | --- |
 | 0 | v0.1 code written (transactions, plan, goals, budgets, analytics, themes) | Done, untested on device |
 | 1 | First device build and smoke test | **In progress**: builds and runs on an emulator, checklist partly walked |
-| 2 | Recurring transactions, custom categories, custom month start | 2a and 2c written and unit-tested, not device-tested; 2b not started |
+| 2 | Recurring transactions, custom categories, custom month start | 2a, 2b and 2c written and unit-tested, not device-tested |
 | 3 | Accounts and transfers | |
 | 4 | Backup, restore, CSV import | |
 | 5 | Split expenses | |

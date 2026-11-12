@@ -2,11 +2,10 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { filterByPeriod, groupByDay, periodLabel, shiftPeriod } from '../../src/domain/analytics';
-import { getCategory } from '../../src/domain/categories';
 import { relativeLabel, today } from '../../src/domain/dates';
 import type { Transaction } from '../../src/domain/types';
 import { useStore } from '../../src/store/useStore';
-import { useMoney, usePeriod } from '../../src/ui/hooks';
+import { useCategories, useMoney, usePeriod } from '../../src/ui/hooks';
 import { Button, Field, Panel, Row, Screen, Segmented, Stepper, Txt } from '../../src/ui/kit';
 import { useTheme } from '../../src/ui/theme';
 
@@ -16,6 +15,7 @@ export default function Transactions() {
   const t = useTheme();
   const router = useRouter();
   const fmt = useMoney();
+  const getCategory = useCategories().get;
   const transactions = useStore((s) => s.transactions);
   const deleteTransaction = useStore((s) => s.deleteTransaction);
   const now = today();
@@ -31,7 +31,7 @@ export default function Transactions() {
       return tx.note.toLowerCase().includes(q) || getCategory(tx.categoryId).name.toLowerCase().includes(q);
     });
     return groupByDay(list);
-  }, [transactions, period, filter, query]);
+  }, [transactions, period, filter, query, getCategory]);
 
   const confirmDelete = (tx: Transaction) =>
     Alert.alert('Delete transaction?', `${tx.note || getCategory(tx.categoryId).name} · ${fmt(tx.amount)}`, [

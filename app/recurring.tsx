@@ -1,12 +1,11 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
-import { getCategory } from '../src/domain/categories';
 import { formatLong, today } from '../src/domain/dates';
 import { describeRule, nextDue } from '../src/domain/recurring';
 import type { RecurringRule } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
-import { useMoney } from '../src/ui/hooks';
+import { useCategories, useMoney } from '../src/ui/hooks';
 import { Badge, Button, Panel, Row, Screen, Txt } from '../src/ui/kit';
 import { useTheme } from '../src/ui/theme';
 
@@ -14,6 +13,7 @@ export default function Recurring() {
   const t = useTheme();
   const router = useRouter();
   const fmt = useMoney();
+  const getCategory = useCategories().get;
   const rules = useStore((s) => s.recurring);
   const saveRecurring = useStore((s) => s.saveRecurring);
   const now = today();

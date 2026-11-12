@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS } from '../domain/types';
 import type { Budget, Frequency, Goal, RecurringRule, Settings, Transaction, TxType } from '../domain/types';
-import { getDb } from './db';
+import type { Category } from '../domain/categories';
+import { getDb, seedCategories } from './db';
 
 /** The only module that talks SQL. Swap this file to change the storage engine. */
 
@@ -17,7 +18,14 @@ export interface Snapshot {
   goals: Goal[];
   budgets: Budget[];
   recurring: RecurringRule[];
+  categories: Category[];
   settings: Settings;
+}
+interface CategoryRow { id: string; name: string; sprite: string; color: string; type: string; sort: number; archived: number }
+
+async function readCategories(db: Awaited<ReturnType<typeof getDb>>): Promise<Category[]> {
+  const rows = await db.getAllAsync<CategoryRow>('SELECT * FROM categories ORDER BY sort ASC');
+  return rows.map((r) => ({ id: r.id, name: r.name, sprite: r.sprite, color: r.color, type: r.type as TxType, sort: r.sort, archived: r.archived !== 0 }));
 }
 
 export async function loadAll(): Promise<Snapshot> {
@@ -43,6 +51,7 @@ export async function loadAll(): Promise<Snapshot> {
       id: r.id, type: r.type as TxType, amount: r.amount, categoryId: r.category_id, note: r.note, frequency: r.frequency as Frequency,
       interval: r.interval, anchorDate: r.anchor_date, endDate: r.end_date, lastRunDate: r.last_run_date, active: r.active !== 0,
     })),
+    categories: await readCategories(db),
     settings: { ...DEFAULT_SETTINGS, ...saved },
   };
 }
@@ -109,6 +118,26 @@ export async function applyRecurringRun(transactions: Transaction[], rules: Recu
     }
     for (const rule of rules) await db.runAsync(RECURRING_SQL, recurringArgs(rule));
   });
+}
+
+/** Saves one or more categories in a single transaction (a reorder touches several). */
+export async function putCategories(categories: Category[]) {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    for (const c of categories) {
+      await db.runAsync('INSERT OR REPLACE INTO categories (id, name, sprite, color, type, sort, archived) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        c.id, c.name, c.sprite, c.color, c.type, c.sort, c.archived ? 1 : 0,
+      ]);
+    }
+  });
+}
+
+/** Back to the built-in list. Returns what is now stored. */
+export async function resetCategories(): Promise<Category[]> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM categories');
+  await seedCategories(db);
+  return readCategories(db);
 }
 
 export async function clearRecurring() {
