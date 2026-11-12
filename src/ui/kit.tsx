@@ -5,17 +5,18 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, Tex
 import type { StyleProp, TextInputProps, TextStyle, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sprite } from './Sprite';
-import { FONT, FONT_BOLD, useTheme } from './theme';
+import { FONT_BOLD, useTheme } from './theme';
 
 /* ---------- Text ---------- */
 
+// The pixel font is for big titles only: its digits (2, 3, 7, 8, 9) are too alike to read amounts in.
 type Variant = 'title' | 'h' | 'body' | 'small' | 'num';
 const TEXT: Record<Variant, TextStyle> = {
   title: { fontFamily: FONT_BOLD, fontSize: 22 },
-  h: { fontFamily: FONT_BOLD, fontSize: 16 },
-  body: { fontFamily: FONT, fontSize: 15 },
-  small: { fontFamily: FONT, fontSize: 12 },
-  num: { fontFamily: FONT_BOLD, fontSize: 28 },
+  h: { fontWeight: '700', fontSize: 16 },
+  body: { fontSize: 15 },
+  small: { fontSize: 12.5 },
+  num: { fontWeight: '800', fontSize: 28, fontVariant: ['tabular-nums'] },
 };
 
 interface TxtProps {
@@ -189,7 +190,7 @@ export function Field({ label, style, ...input }: FieldProps) {
       <TextInput
         placeholderTextColor={t.dim}
         {...input}
-        style={[{ fontFamily: FONT, fontSize: 16, color: t.text, backgroundColor: t.panel, borderColor: t.border, borderWidth: 2, borderRadius: 8, paddingHorizontal: 12, minHeight: 48 }, style]}
+        style={[{ fontSize: 16, color: t.text, backgroundColor: t.panel, borderColor: t.border, borderWidth: 2, borderRadius: 8, paddingHorizontal: 12, minHeight: 48 }, style]}
       />
     </View>
   );
@@ -255,7 +256,7 @@ export function AmountPrompt({ visible, title, hint, initial = '', confirmLabel 
             autoFocus
             placeholder="0"
             placeholderTextColor={t.dim}
-            style={{ fontFamily: FONT_BOLD, fontSize: 26, color: t.text, backgroundColor: t.bg, borderColor: t.border, borderWidth: 2, borderRadius: 8, paddingHorizontal: 12, minHeight: 56 }}
+            style={{ fontWeight: '800', fontSize: 26, color: t.text, backgroundColor: t.bg, borderColor: t.border, borderWidth: 2, borderRadius: 8, paddingHorizontal: 12, minHeight: 56 }}
           />
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Button label="Cancel" kind="ghost" onPress={onCancel} style={{ flex: 1 }} />

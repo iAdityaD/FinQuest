@@ -1,11 +1,14 @@
 import React, { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { PixelRatio, View } from 'react-native';
 import type { SeriesPoint } from '../domain/analytics';
 import { Txt } from './kit';
 import { useTheme } from './theme';
 
-const GRID = 23;
+// Fine enough that the ring reads as a smooth circle; still only a few hundred views.
+const GRID = 91;
+/** Half-width, in turns, of the dark gap drawn between two slices. */
+const GAP = 0.003;
 
 interface Slice {
   share: number;
@@ -15,7 +18,8 @@ interface Slice {
 /** A donut drawn on a pixel grid: every cell picks the slice its angle falls into. */
 export function PixelDonut({ slices, size = 150, children }: { slices: Slice[]; size?: number; children?: ReactNode }) {
   const t = useTheme();
-  const px = Math.max(2, Math.floor(size / GRID));
+  // Cells are a whole number of device pixels, otherwise hairline seams show between rows.
+  const px = Math.max(1, Math.floor(PixelRatio.getPixelSizeForLayoutSize(size) / GRID)) / PixelRatio.get();
 
   const rows = useMemo(() => {
     const c = (GRID - 1) / 2;
@@ -29,10 +33,12 @@ export function PixelDonut({ slices, size = 150, children }: { slices: Slice[]; 
       const dx = x - c;
       const dy = y - c;
       const r = Math.sqrt(dx * dx + dy * dy);
-      if (r > c + 0.3 || r < c * 0.55) return null;
+      if (r > c + 0.3 || r < c * 0.6) return null;
       if (!stops.length) return t.border;
       let turn = Math.atan2(dx, -dy) / (2 * Math.PI); // clockwise from 12 o'clock
       if (turn < 0) turn += 1;
+      // A thin gap at every slice edge (including 12 o'clock) keeps neighbouring colours apart.
+      if (stops.length > 1 && (turn < GAP || turn > 1 - GAP || stops.some((s) => Math.abs(turn - s.until) < GAP))) return null;
       return (stops.find((s) => turn < s.until) ?? stops[stops.length - 1]).color;
     };
     const out: { color: string | null; len: number }[][] = [];

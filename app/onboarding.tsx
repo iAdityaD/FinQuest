@@ -29,7 +29,7 @@ export default function Onboarding() {
     <Screen>
       <View style={{ alignItems: 'center', gap: 6, marginTop: 24 }}>
         <Coin3D size={110} background={t.bg} />
-        <Txt v="num" style={{ fontSize: 40 }}>FinQuest</Txt>
+        <Txt v="title" style={{ fontSize: 40 }}>FinQuest</Txt>
         <Txt dim style={{ textAlign: 'center' }}>Your personal finance tracker.{'\n'}Offline. Private. Yours.</Txt>
       </View>
 
