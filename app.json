@@ -8,11 +8,6 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0f0b1e",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0f0b1e"
-    },
     "android": {
       "package": "com.finquest.app",
       "adaptiveIcon": {
@@ -24,6 +19,19 @@
       "bundleIdentifier": "com.finquest.app",
       "supportsTablet": false
     },
-    "plugins": ["expo-router", "expo-sqlite", "expo-font"]
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0f0b1e"
+        }
+      ]
+    ]
   }
 }
