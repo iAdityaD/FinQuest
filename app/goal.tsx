@@ -1,11 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { GOAL_ICONS } from '../src/domain/categories';
 import { addDays, addMonths, formatLong, today } from '../src/domain/dates';
 import { goalProgress } from '../src/domain/goals';
 import { parseAmount, toInput } from '../src/domain/money';
 import { useStore } from '../src/store/useStore';
+import { confirm } from '../src/ui/dialog';
 import { useMoney } from '../src/ui/hooks';
 import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
 import { Sprite } from '../src/ui/Sprite';
@@ -43,17 +44,10 @@ export default function GoalForm() {
   };
 
   const remove = () =>
-    Alert.alert('Delete goal?', 'Your transactions are not affected.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          if (existing) deleteGoal(existing.id);
-          router.back();
-        },
-      },
-    ]);
+    confirm('Delete goal?', 'Your transactions are not affected.', 'Delete', () => {
+      if (existing) deleteGoal(existing.id);
+      router.back();
+    });
 
   return (
     <Screen title={existing ? 'Edit Goal' : 'New Goal'} back>

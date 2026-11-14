@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { filterByPeriod, groupByDay, periodLabel, shiftPeriod } from '../../src/domain/analytics';
 import { relativeLabel, today } from '../../src/domain/dates';
 import type { Transaction } from '../../src/domain/types';
 import { useStore } from '../../src/store/useStore';
+import { confirm } from '../../src/ui/dialog';
 import { useCategories, useMoney, usePeriod } from '../../src/ui/hooks';
 import { Button, Field, Panel, Row, Screen, Segmented, Stepper, Txt } from '../../src/ui/kit';
 import { useTheme } from '../../src/ui/theme';
@@ -34,10 +35,7 @@ export default function Transactions() {
   }, [transactions, period, filter, query, getCategory]);
 
   const confirmDelete = (tx: Transaction) =>
-    Alert.alert('Delete transaction?', `${tx.note || getCategory(tx.categoryId).name} · ${fmt(tx.amount)}`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteTransaction(tx.id) },
-    ]);
+    confirm('Delete transaction?', `${tx.note || getCategory(tx.categoryId).name} · ${fmt(tx.amount)}`, 'Delete', () => deleteTransaction(tx.id));
 
   return (
     <Screen title="Transactions">

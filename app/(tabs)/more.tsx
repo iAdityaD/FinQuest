@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, Share } from 'react-native';
+import { Share } from 'react-native';
 import { toCSV } from '../../src/domain/csv';
 import { useStore } from '../../src/store/useStore';
+import { notify } from '../../src/ui/dialog';
 import { useCategories } from '../../src/ui/hooks';
 import { Panel, Row, Screen, Txt } from '../../src/ui/kit';
 import { PixelScene } from '../../src/ui/PixelScene';
@@ -21,13 +22,13 @@ export default function More() {
 
   const exportCsv = async () => {
     if (transactions.length === 0) {
-      Alert.alert('Nothing to export', 'Add a transaction first.');
+      notify('Nothing to export', 'Add a transaction first.');
       return;
     }
     try {
       await Share.share({ title: 'finquest-transactions.csv', message: toCSV(transactions, currency, categories.get) });
     } catch {
-      Alert.alert('Export failed', 'The share sheet could not be opened.');
+      notify('Export failed', 'The share sheet could not be opened.');
     }
   };
 
@@ -40,6 +41,7 @@ export default function More() {
         <Row sprite="shopping" title="Categories" subtitle="Add, rename, reorder, archive" right={arrow} onPress={() => router.push('/categories')} />
         <Row sprite="bills" title="Export CSV" subtitle={`${transactions.length} transactions`} right={arrow} onPress={exportCsv} />
         <Row sprite="gear" title="Settings" subtitle="Theme, currency, data" right={arrow} onPress={() => router.push('/settings')} />
+        <Row sprite="star" title="Help & quest guide" subtitle="How to play, XP and levels" right={arrow} onPress={() => router.push('/help')} />
       </Panel>
       <PixelScene height={140}>
         <Sprite name="star" size={30} />

@@ -61,6 +61,10 @@ export function categoriesFor(type: TxType, list: Category[] = CATEGORIES, keepI
 export const archivedCategories = (list: Category[]) => list.filter((c) => c.archived).sort(bySort);
 
 export const canArchive = (category: Category) => category.id !== CATCH_ALL[category.type];
+/** Anything but the catch-alls can be deleted for good. */
+export const canDelete = canArchive;
+/** Where a deleted category's transactions and repeating rules go. */
+export const replacementFor = (category: Category) => CATCH_ALL[category.type];
 
 export const MAX_CATEGORY_NAME = 24;
 

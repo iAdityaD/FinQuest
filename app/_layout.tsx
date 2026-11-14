@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { useStore } from '../src/store/useStore';
+import { DialogHost } from '../src/ui/dialog';
 import { useTheme } from '../src/ui/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -40,6 +41,7 @@ export default function RootLayout() {
     <>
       <StatusBar style={themeName === 'light' ? 'dark' : 'light'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }} />
+      <DialogHost />
     </>
   );
 }

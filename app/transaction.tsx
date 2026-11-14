@@ -1,11 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 import { addDays, addMonths, formatLong, relativeLabel, today } from '../src/domain/dates';
 import { CURRENCIES, parseAmount, toInput } from '../src/domain/money';
 import { describeRule } from '../src/domain/recurring';
 import type { Frequency, TxType } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
+import { confirm } from '../src/ui/dialog';
 import { useCategories } from '../src/ui/hooks';
 import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
 import { Sprite } from '../src/ui/Sprite';
@@ -63,21 +64,15 @@ export default function TransactionForm() {
   };
 
   const remove = () =>
-    Alert.alert(
+    confirm(
       rule ? 'Stop repeating?' : 'Delete transaction?',
       rule ? 'Transactions it has already logged stay where they are.' : 'This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            if (rule) deleteRecurring(rule.id);
-            else if (existing) deleteTransaction(existing.id);
-            router.back();
-          },
-        },
-      ],
+      rule ? 'Stop' : 'Delete',
+      () => {
+        if (rule) deleteRecurring(rule.id);
+        else if (existing) deleteTransaction(existing.id);
+        router.back();
+      },
     );
 
   return (

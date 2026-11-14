@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { CATEGORY_COLORS, CATEGORY_SPRITES, MAX_CATEGORY_NAME, archivedCategories, canArchive, nameProblem } from '../src/domain/categories';
+import { CATEGORY_COLORS, CATEGORY_SPRITES, MAX_CATEGORY_NAME, archivedCategories, canArchive, canDelete, nameProblem } from '../src/domain/categories';
 import type { Category } from '../src/domain/categories';
 import type { TxType } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
+import { confirm } from '../src/ui/dialog';
 import { useCategories } from '../src/ui/hooks';
 import { Button, Field, Panel, Screen, Segmented, Txt } from '../src/ui/kit';
 import { Sprite } from '../src/ui/Sprite';
@@ -24,6 +25,8 @@ export default function Categories() {
   const { all, forType } = useCategories();
   const saveCategory = useStore((s) => s.saveCategory);
   const moveCategory = useStore((s) => s.moveCategory);
+  const deleteCategory = useStore((s) => s.deleteCategory);
+  const transactions = useStore((s) => s.transactions);
   const [type, setType] = useState<TxType>('expense');
   const [draft, setDraft] = useState<Draft | null>(null);
 
@@ -40,6 +43,22 @@ export default function Categories() {
   const setArchived = (category: Category, value: boolean) => {
     saveCategory({ ...category, archived: value });
     if (draft?.id === category.id) setDraft(null);
+  };
+
+  const remove = (category: Category) => {
+    const used = transactions.filter((tx) => tx.categoryId === category.id).length;
+    const other = type === 'expense' ? 'Other' : 'Other income';
+    confirm(
+      `Delete ${category.name}?`,
+      used > 0
+        ? `${used} transaction${used === 1 ? '' : 's'} will move to "${other}". This cannot be undone. Archive it instead to keep them as they are.`
+        : 'Nothing uses it yet. This cannot be undone.',
+      'Delete',
+      () => {
+        deleteCategory(category.id);
+        if (draft?.id === category.id) setDraft(null);
+      },
+    );
   };
 
   const swatch = (selected: boolean) => ({
@@ -130,6 +149,7 @@ export default function Categories() {
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Button label="Edit" kind="ghost" style={{ flex: 1 }} onPress={() => setDraft({ id: cat.id, name: cat.name, sprite: cat.sprite, color: cat.color })} />
             {canArchive(cat) ? <Button label="Archive" kind="ghost" style={{ flex: 1 }} onPress={() => setArchived(cat, true)} /> : null}
+            {canDelete(cat) ? <Button label="Delete" kind="danger" style={{ flex: 1 }} onPress={() => remove(cat)} /> : null}
           </View>
         </Panel>
       ))}
@@ -140,11 +160,12 @@ export default function Categories() {
           <Sprite name={cat.sprite} size={30} />
           <Txt v="h" dim style={{ flex: 1 }} numberOfLines={1}>{cat.name}</Txt>
           <Button label="Restore" kind="ghost" onPress={() => setArchived(cat, false)} />
+          <Button label="Delete" kind="danger" onPress={() => remove(cat)} />
         </Panel>
       ))}
 
       <Txt v="small" dim style={{ textAlign: 'center' }}>
-        Archived categories stay on your old transactions and in your charts. They only leave the list you pick from.
+        Archive hides a category from the picker but keeps it on old transactions. Delete removes it and moves its transactions to "Other".
       </Txt>
     </Screen>
   );

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as repo from '../data/repo';
-import { CATEGORIES, moveCategory as moveCategoryIn, nextSort } from '../domain/categories';
+import { CATEGORIES, canDelete, moveCategory as moveCategoryIn, nextSort, replacementFor } from '../domain/categories';
 import type { Category } from '../domain/categories';
 import { today } from '../domain/dates';
 import { demoData } from '../domain/demo';
@@ -36,6 +36,8 @@ interface State {
   /** Adds a category (no id) or changes an existing one, including archiving and restoring it. */
   saveCategory: (input: CategoryInput) => void;
   moveCategory: (id: string, direction: -1 | 1) => void;
+  /** Removes a category for good; its transactions and repeating rules move to the catch-all of its type. */
+  deleteCategory: (id: string) => void;
   updateSettings: (patch: Partial<Settings>) => void;
   loadDemo: () => void;
   eraseAll: () => void;
@@ -152,6 +154,19 @@ export const useStore = create<State>()((set, get) => ({
     const byId = new Map(changed.map((c) => [c.id, c]));
     set((s) => ({ categories: s.categories.map((c) => byId.get(c.id) ?? c) }));
     persist(repo.putCategories(changed));
+  },
+
+  deleteCategory: (id) => {
+    const category = get().categories.find((c) => c.id === id);
+    if (!category || !canDelete(category)) return;
+    const to = replacementFor(category);
+    set((s) => ({
+      categories: s.categories.filter((c) => c.id !== id),
+      transactions: s.transactions.map((t) => (t.categoryId === id ? { ...t, categoryId: to } : t)),
+      recurring: s.recurring.map((r) => (r.categoryId === id ? { ...r, categoryId: to } : r)),
+      budgets: s.budgets.filter((b) => b.categoryId !== id),
+    }));
+    persist(repo.removeCategory(id, to));
   },
 
   updateSettings: (patch) => {

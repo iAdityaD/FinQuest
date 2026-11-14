@@ -132,6 +132,20 @@ export async function putCategories(categories: Category[]) {
   });
 }
 
+/**
+ * Deletes a category for good. Its transactions and repeating rules move to
+ * `replacementId` and its budget goes, all in one transaction.
+ */
+export async function removeCategory(id: string, replacementId: string) {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE transactions SET category_id = ? WHERE category_id = ?', [replacementId, id]);
+    await db.runAsync('UPDATE recurring SET category_id = ? WHERE category_id = ?', [replacementId, id]);
+    await db.runAsync('DELETE FROM budgets WHERE category_id = ?', [id]);
+    await db.runAsync('DELETE FROM categories WHERE id = ?', [id]);
+  });
+}
+
 /** Back to the built-in list. Returns what is now stored. */
 export async function resetCategories(): Promise<Category[]> {
   const db = await getDb();

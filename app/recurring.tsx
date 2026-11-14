@@ -5,6 +5,7 @@ import { formatLong, today } from '../src/domain/dates';
 import { describeRule, nextDue } from '../src/domain/recurring';
 import type { RecurringRule } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
+import { confirm } from '../src/ui/dialog';
 import { useCategories, useMoney } from '../src/ui/hooks';
 import { Badge, Button, Panel, Row, Screen, Txt } from '../src/ui/kit';
 import { useTheme } from '../src/ui/theme';
@@ -16,6 +17,7 @@ export default function Recurring() {
   const getCategory = useCategories().get;
   const rules = useStore((s) => s.recurring);
   const saveRecurring = useStore((s) => s.saveRecurring);
+  const deleteRecurring = useStore((s) => s.deleteRecurring);
   const now = today();
 
   const status = (rule: RecurringRule) => {
@@ -49,7 +51,16 @@ export default function Recurring() {
               <View style={{ flex: 1 }}>
                 <Badge label={rule.active ? 'Active' : 'Paused'} color={rule.active ? t.good : t.dim} />
               </View>
-              <Button label={rule.active ? 'Pause' : 'Resume'} kind="ghost" onPress={() => saveRecurring({ ...rule, active: !rule.active })} />
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Button label="Edit" kind="ghost" style={{ flex: 1 }} onPress={() => router.push({ pathname: '/transaction', params: { rule: rule.id } })} />
+              <Button label={rule.active ? 'Pause' : 'Resume'} kind="ghost" style={{ flex: 1 }} onPress={() => saveRecurring({ ...rule, active: !rule.active })} />
+              <Button
+                label="Delete"
+                kind="danger"
+                style={{ flex: 1 }}
+                onPress={() => confirm('Stop repeating?', 'Transactions it has already logged stay where they are.', 'Stop', () => deleteRecurring(rule.id))}
+              />
             </View>
           </Panel>
         );
@@ -59,7 +70,7 @@ export default function Recurring() {
         <Button label="Expense" sprite="plus" kind="danger" style={{ flex: 1 }} onPress={() => router.push('/transaction?type=expense')} />
         <Button label="Income" sprite="plus" style={{ flex: 1 }} onPress={() => router.push('/transaction?type=income')} />
       </View>
-      {rules.length > 0 ? <Txt v="small" dim style={{ textAlign: 'center' }}>Tap to edit. A paused rule skips the days it was paused.</Txt> : null}
+      {rules.length > 0 ? <Txt v="small" dim style={{ textAlign: 'center' }}>A paused rule skips the days it was paused.</Txt> : null}
     </Screen>
   );
 }

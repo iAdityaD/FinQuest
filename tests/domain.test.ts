@@ -4,7 +4,7 @@ import { byCategory, filterByPeriod, groupByDay, periodLabel, series, shiftPerio
 import { toCSV } from '../src/domain/csv';
 import { addDays, addMonths, diffDays, endOfMonth, relativeLabel } from '../src/domain/dates';
 import { demoData } from '../src/domain/demo';
-import { dailyQuests, levelFor, streak } from '../src/domain/game';
+import { TITLES, XP, dailyQuests, levelFor, levelStart, streak, titleFor, totalXp } from '../src/domain/game';
 import { contributionDates, goalProgress } from '../src/domain/goals';
 import { buildInsights } from '../src/domain/insights';
 import { formatMoney, parseAmount, toInput } from '../src/domain/money';
@@ -173,4 +173,19 @@ test('csv and demo data', () => {
   assert.ok(demo.transactions.length > 50);
   assert.ok(demo.transactions.every((t) => t.date >= '2026-09-01' && t.date <= '2026-11-11' && t.amount > 0));
   assert.deepEqual(demoData('2026-11-11'), demo);
+});
+
+test('game: xp table, level starts and titles agree with levelFor', () => {
+  assert.equal(levelStart(1), 0);
+  assert.equal(levelStart(2), 100);
+  assert.equal(levelStart(5), 1000);
+  for (const level of [1, 2, 3, 7, 12]) {
+    assert.equal(levelFor(levelStart(level)).level, level);
+    assert.equal(levelFor(levelStart(level)).title, titleFor(level));
+    if (level > 1) assert.equal(levelFor(levelStart(level) - 1).level, level - 1);
+  }
+  assert.equal(titleFor(1), TITLES[0]);
+  assert.equal(titleFor(99), TITLES[TITLES.length - 1]);
+  const txs = [tx('expense', 100, '2026-11-11'), tx('expense', 100, '2026-11-10')];
+  assert.equal(totalXp(txs, [], [{ categoryId: 'food', amount: 1 }], '2026-11-11'), 2 * XP.transaction + 2 * XP.streakDay + XP.budget);
 });

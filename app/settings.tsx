@@ -1,8 +1,8 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { CURRENCIES } from '../src/domain/money';
 import type { CurrencyCode, ThemeName } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
+import { confirm } from '../src/ui/dialog';
 import { Button, Panel, Screen, Segmented, Txt } from '../src/ui/kit';
 import { THEMES } from '../src/ui/theme';
 
@@ -14,12 +14,6 @@ export default function Settings() {
   const updateSettings = useStore((s) => s.updateSettings);
   const loadDemo = useStore((s) => s.loadDemo);
   const eraseAll = useStore((s) => s.eraseAll);
-
-  const confirm = (title: string, message: string, action: string, run: () => void) =>
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: action, style: 'destructive', onPress: run },
-    ]);
 
   return (
     <Screen title="Settings" back>

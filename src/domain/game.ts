@@ -14,7 +14,7 @@ export function streak(txs: Transaction[], today: ISODate) {
   return n;
 }
 
-const TITLES = ['Coin Rookie', 'Penny Scout', 'Budget Squire', 'Ledger Knight', 'Vault Keeper', 'Gold Sage', 'Finance Legend'];
+export const TITLES = ['Coin Rookie', 'Penny Scout', 'Budget Squire', 'Ledger Knight', 'Vault Keeper', 'Gold Sage', 'Finance Legend'];
 
 export interface Level {
   level: number;
@@ -23,6 +23,14 @@ export interface Level {
   xpIntoLevel: number;
   xpForNext: number;
 }
+
+/** What each action is worth. The Help screen reads these, so the guide can never drift from the maths. */
+export const XP = { transaction: 10, streakDay: 5, goal: 30, goalDone: 200, budget: 20 } as const;
+
+/** XP at which a level starts. Each level needs 100 more than the last. */
+export const levelStart = (level: number) => (100 * level * (level - 1)) / 2;
+/** Title held at a level: a new one every two levels. */
+export const titleFor = (level: number) => TITLES[Math.min(TITLES.length - 1, Math.floor((Math.max(1, level) - 1) / 2))];
 
 /** Level L starts at 100 * L * (L - 1) / 2 XP, so each level needs 100 more than the last. */
 export function levelFor(xp: number): Level {
@@ -39,7 +47,7 @@ export function levelFor(xp: number): Level {
 
 export function totalXp(txs: Transaction[], goals: Goal[], budgets: Budget[], today: ISODate) {
   const done = goals.filter((g) => g.targetAmount > 0 && g.savedAmount >= g.targetAmount).length;
-  return txs.length * 10 + streak(txs, today) * 5 + goals.length * 30 + done * 200 + budgets.length * 20;
+  return txs.length * XP.transaction + streak(txs, today) * XP.streakDay + goals.length * XP.goal + done * XP.goalDone + budgets.length * XP.budget;
 }
 
 export interface Quest {

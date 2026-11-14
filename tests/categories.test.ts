@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CATEGORIES, CATEGORY_SPRITES, archivedCategories, canArchive, categoriesFor, makeLookup, moveCategory, nameProblem, nextSort } from '../src/domain/categories';
+import { CATEGORIES, CATEGORY_SPRITES, archivedCategories, canArchive, canDelete, categoriesFor, makeLookup, moveCategory, nameProblem, nextSort, replacementFor } from '../src/domain/categories';
 import type { Category } from '../src/domain/categories';
 import { toCSV } from '../src/domain/csv';
 import { SPRITES } from '../src/ui/sprites';
@@ -67,4 +67,15 @@ test('categories: picker sprites exist and CSV uses the given names', () => {
   const tx = { id: '1', type: 'expense' as const, amount: 12000, categoryId: 'c1', date: '2026-11-12', note: '', createdAt: 0 };
   assert.match(toCSV([tx], 'INR', makeLookup([...CATEGORIES, custom])), /2026-11-12,expense,Pets,120,INR,/);
   assert.match(toCSV([tx], 'INR'), /2026-11-12,expense,Other,120,INR,/);
+});
+
+test('categories: a deleted category hands its entries to the catch-all of its type', () => {
+  const get = makeLookup(CATEGORIES);
+  assert.equal(replacementFor(get('food')), 'other');
+  assert.equal(replacementFor(get('salary')), 'other-income');
+  assert.equal(replacementFor(custom), 'other');
+  assert.equal(canDelete(get('other')), false);
+  assert.equal(canDelete(get('other-income')), false);
+  assert.equal(canDelete(get('food')), true);
+  assert.equal(canDelete(custom), true);
 });
