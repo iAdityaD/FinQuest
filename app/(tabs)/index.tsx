@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { filterByPeriod, summarize } from '../../src/domain/analytics';
-import { formatCycle, relativeLabel, today } from '../../src/domain/dates';
+import { formatCycle, formatLong, relativeLabel, today } from '../../src/domain/dates';
 import { dailyQuests, levelFor, streak, totalXp } from '../../src/domain/game';
+import { parseAmount, toInput } from '../../src/domain/money';
+import { pendingOccurrences } from '../../src/domain/recurring';
+import type { PendingOccurrence } from '../../src/domain/recurring';
 import { useStore } from '../../src/store/useStore';
 import { Coin3D } from '../../src/ui/Coin3D';
 import { useCategories, useMoney, usePlan } from '../../src/ui/hooks';
-import { Badge, Button, Panel, ProgressBar, Row, Screen, Txt } from '../../src/ui/kit';
+import { AmountPrompt, Badge, Button, Panel, ProgressBar, Row, Screen, Txt } from '../../src/ui/kit';
 import { PixelScene } from '../../src/ui/PixelScene';
 import { Sprite } from '../../src/ui/Sprite';
 import { useTheme } from '../../src/ui/theme';
@@ -24,6 +27,12 @@ export default function Home() {
   const savingsTarget = useStore((s) => s.settings.monthlySavingsTarget);
   const startDay = useStore((s) => s.settings.monthStartDay);
   const now = today();
+  const recurring = useStore((s) => s.recurring);
+  const currency = useStore((s) => s.settings.currency);
+  const resolveOccurrence = useStore((s) => s.resolveOccurrence);
+  // Variable-amount repeats that have come due and need the real figure.
+  const waiting = useMemo(() => pendingOccurrences(recurring, now), [recurring, now]);
+  const [answering, setAnswering] = useState<PendingOccurrence | null>(null);
 
   const month = useMemo(() => summarize(filterByPeriod(transactions, { kind: 'month', anchor: now, startDay })), [transactions, now, startDay]);
   const balance = useMemo(() => summarize(transactions).net, [transactions]);
@@ -89,6 +98,24 @@ export default function Home() {
         )}
       </Panel>
 
+      {waiting.map((w) => {
+        const cat = getCategory(w.rule.categoryId);
+        return (
+          <Panel key={w.rule.id} style={{ gap: 8, borderColor: t.info }}>
+            <Row
+              sprite={cat.sprite}
+              title={w.rule.note || cat.name}
+              subtitle={`Due ${relativeLabel(w.date, now) === 'Today' ? 'today' : formatLong(w.date)}${w.more > 0 ? ` · ${w.more} more waiting` : ''}`}
+              right={<Badge label="How much?" color={t.info} />}
+            />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Button label="Enter amount" style={{ flex: 2 }} onPress={() => setAnswering(w)} />
+              <Button label="Skip" kind="ghost" style={{ flex: 1 }} onPress={() => resolveOccurrence(w.rule.id, w.date, null)} />
+            </View>
+          </Panel>
+        );
+      })}
+
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Button label="Expense" sprite="plus" kind="danger" style={{ flex: 1 }} onPress={() => router.push('/transaction?type=expense')} />
         <Button label="Income" sprite="plus" style={{ flex: 1 }} onPress={() => router.push('/transaction?type=income')} />
@@ -142,6 +169,20 @@ export default function Home() {
           );
         })}
       </Panel>
+
+      <AmountPrompt
+        visible={answering !== null}
+        title={answering ? answering.rule.note || getCategory(answering.rule.categoryId).name : ''}
+        hint={answering ? `How much was it on ${formatLong(answering.date)}?` : undefined}
+        initial={answering ? toInput(answering.rule.amount, currency) : ''}
+        confirmLabel="Log it"
+        onCancel={() => setAnswering(null)}
+        onSubmit={(text) => {
+          const amount = parseAmount(text, currency);
+          if (answering && amount > 0) resolveOccurrence(answering.rule.id, answering.date, amount);
+          setAnswering(null);
+        }}
+      />
     </Screen>
   );
 }

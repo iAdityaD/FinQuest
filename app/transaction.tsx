@@ -1,11 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
-import { addDays, addMonths, formatLong, relativeLabel, today } from '../src/domain/dates';
+import { addMonths, formatLong, parts, today } from '../src/domain/dates';
 import { CURRENCIES, parseAmount, toInput } from '../src/domain/money';
-import { describeRule } from '../src/domain/recurring';
+import { describeRule, isMonthEnd } from '../src/domain/recurring';
 import type { Frequency, TxType } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
+import { DateField } from '../src/ui/calendar';
 import { confirm } from '../src/ui/dialog';
 import { useCategories } from '../src/ui/hooks';
 import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
@@ -39,11 +40,19 @@ export default function TransactionForm() {
   const [interval, setEvery] = useState(rule?.interval ?? 1);
   const [hasEnd, setHasEnd] = useState<'no' | 'yes'>(rule?.endDate ? 'yes' : 'no');
   const [endDate, setEndDate] = useState(rule?.endDate ?? addMonths(now, 12));
+  const [askAmount, setAskAmount] = useState<'fixed' | 'ask'>(rule?.askAmount ? 'ask' : 'fixed');
+  const [onLastDay, setOnLastDay] = useState<'day' | 'last'>(rule?.monthEnd ? 'last' : 'day');
 
   const amount = parseAmount(amountText, currency);
   const categories = categoriesFor(type);
   const color = type === 'expense' ? t.bad : t.good;
   const repeats = repeat !== 'none';
+  // Only a rule can ask for its amount later; then the figure here is just the usual one.
+  const asks = repeats && !existing && askAmount === 'ask';
+  // "Last day of the month" is offered when the start date is one and the rule runs by months.
+  const byMonth = repeat === 'monthly' || repeat === 'yearly';
+  const canBeLastDay = byMonth && isMonthEnd(date);
+  const monthEnd = canBeLastDay && (onLastDay === 'last' || parts(date).d === 31);
 
   const changeType = (next: TxType) => {
     setType(next);
@@ -55,7 +64,7 @@ export default function TransactionForm() {
       // The rule logs its own transactions, starting with today's if it is already due.
       saveRecurring({
         id: rule?.id, type, amount, categoryId, note: note.trim(), frequency: repeat, interval,
-        anchorDate: date, endDate: hasEnd === 'yes' ? endDate : null, active: rule?.active ?? true,
+        anchorDate: date, endDate: hasEnd === 'yes' ? endDate : null, active: rule?.active ?? true, askAmount: asks, monthEnd,
       });
     } else {
       saveTransaction({ id: existing?.id, type, amount, categoryId, date, note: note.trim() });
@@ -122,7 +131,23 @@ export default function TransactionForm() {
       </View>
 
       <Txt v="small" dim>{repeats ? 'Starts' : 'Date'}</Txt>
-      <Stepper label={relativeLabel(date, now)} onPrev={() => setDate(addDays(date, -1))} onNext={() => setDate(addDays(date, 1))} />
+      <DateField value={date} onChange={setDate} title={repeats ? 'First date' : 'Transaction date'} />
+      {canBeLastDay && parts(date).d < 31 ? (
+        <>
+          <Segmented
+            value={onLastDay}
+            onChange={setOnLastDay}
+            options={[{ value: 'day', label: `On day ${parts(date).d}` }, { value: 'last', label: 'Last day of month' }]}
+          />
+          <Txt v="small" dim>
+            {monthEnd
+              ? 'Falls on the 31st, 30th, or 28th/29th of February: whatever the last day of that month is.'
+              : `Falls on day ${parts(date).d} every time. Months that are shorter use their last day.`}
+          </Txt>
+        </>
+      ) : null}
+      {byMonth && parts(date).d === 31 ? <Txt v="small" dim>The 31st means the last day of every month, so shorter months are never skipped.</Txt> : null}
+      {byMonth && !canBeLastDay && parts(date).d > 28 ? <Txt v="small" dim>Months without a day {parts(date).d} use their last day instead.</Txt> : null}
 
       <Field label="Note (optional)" value={note} onChangeText={setNote} placeholder="Lunch, metro, salary..." maxLength={80} />
 
@@ -148,21 +173,24 @@ export default function TransactionForm() {
           <Segmented value={hasEnd} onChange={setHasEnd} options={[{ value: 'no', label: 'No end' }, { value: 'yes', label: 'Ends on' }]} />
           {hasEnd === 'yes' ? (
             <>
-              <Stepper label={formatLong(endDate)} onPrev={() => setEndDate(addMonths(endDate, -1))} onNext={() => setEndDate(addMonths(endDate, 1))} />
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <Button label="- 1 day" kind="ghost" style={{ flex: 1 }} onPress={() => setEndDate(addDays(endDate, -1))} />
-                <Button label="+ 1 day" kind="ghost" style={{ flex: 1 }} onPress={() => setEndDate(addDays(endDate, 1))} />
-              </View>
+              <DateField value={endDate} onChange={setEndDate} title="Last date" min={date} format={formatLong} />
             </>
           ) : null}
-          <Txt v="small" dim>FinQuest logs this for you each time it comes due, including any it missed while the app was closed.</Txt>
+
+          <Txt v="small" dim>Amount</Txt>
+          <Segmented value={askAmount} onChange={setAskAmount} options={[{ value: 'fixed', label: 'Same each time' }, { value: 'ask', label: 'Ask me each time' }]} />
+          <Txt v="small" dim>
+            {asks
+              ? 'For amounts that change, like a variable salary or an electricity bill. Nothing is logged on its own: when it comes due, Home asks you for the real figure. The amount above is only your usual one, and can be left empty.'
+              : 'For fixed amounts, like rent or a SIP. FinQuest logs it each time it comes due, including any it missed while the app was closed. Edit the rule later to change the amount from then on.'}
+          </Txt>
         </>
       ) : null}
 
       <Button
         label={source ? 'Save changes' : repeats ? 'Add Repeating' : type === 'expense' ? 'Add Expense' : 'Add Income'}
         kind={type === 'expense' ? 'danger' : 'primary'}
-        disabled={amount <= 0}
+        disabled={amount <= 0 && !asks}
         onPress={save}
       />
       {source ? <Button label={rule ? 'Stop repeating' : 'Delete'} kind="ghost" onPress={remove} /> : null}

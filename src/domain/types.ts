@@ -80,4 +80,15 @@ export interface RecurringRule {
   /** Occurrences up to and including this date already exist. */
   lastRunDate: ISODate | null;
   active: boolean;
+  /**
+   * True for amounts that change each time (a variable salary, an electricity bill).
+   * Nothing is logged automatically: each occurrence waits for the user to enter the amount.
+   * `amount` is then only the usual figure offered as a starting point (0 = none).
+   */
+  askAmount: boolean;
+  /**
+   * Monthly and yearly rules only: fall on the last day of the month, whatever
+   * its length (31, 30, 28 or 29), instead of on the anchor's day number.
+   */
+  monthEnd: boolean;
 }

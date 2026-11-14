@@ -1,4 +1,4 @@
-import { addDays, addMonths, diffDays } from './dates';
+import { addDays, addMonths, diffDays, endOfMonth, parts } from './dates';
 import type { ISODate, RecurringRule, Transaction } from './types';
 
 /** The k-th occurrence of a rule (k = 0 is the anchor date itself). */
@@ -11,11 +11,19 @@ function occurrence(rule: RecurringRule, k: number): ISODate {
       return addDays(rule.anchorDate, step * 7);
     case 'monthly':
       // Always counted from the anchor, so a rule on the 31st gives Feb 28 and then Mar 31 again.
-      return addMonths(rule.anchorDate, step);
+      return monthly(rule, step);
     case 'yearly':
-      return addMonths(rule.anchorDate, step * 12);
+      return monthly(rule, step * 12);
   }
 }
+
+const monthly = (rule: RecurringRule, months: number) => {
+  const date = addMonths(rule.anchorDate, months);
+  return rule.monthEnd ? endOfMonth(date) : date;
+};
+
+/** True when a date is the last day of its month: the form then offers "last day of every month". */
+export const isMonthEnd = (date: ISODate) => endOfMonth(date) === date;
 
 /** A safe lower bound for the first occurrence index that can fall on or after `from`. */
 function firstIndex(rule: RecurringRule, from: ISODate): number {
@@ -66,6 +74,8 @@ export function materialize(rules: RecurringRule[], today: ISODate, stamp = Date
   const updatedRules: RecurringRule[] = [];
   for (const rule of rules) {
     if (rule.lastRunDate && rule.lastRunDate >= today) continue;
+    // Variable amounts are never logged for the user: they wait in pendingOccurrences.
+    if (rule.active && rule.askAmount) continue;
     if (rule.active) {
       const from = rule.lastRunDate ? addDays(rule.lastRunDate, 1) : rule.anchorDate;
       for (const date of dueDates(rule, from, today)) {
@@ -85,8 +95,53 @@ export function materialize(rules: RecurringRule[], today: ISODate, stamp = Date
   return { transactions, updatedRules };
 }
 
+export interface PendingOccurrence {
+  rule: RecurringRule;
+  /** The oldest occurrence still waiting for an amount. */
+  date: ISODate;
+  /** How many more are queued behind it. */
+  more: number;
+}
+
+/**
+ * Occurrences of ask-for-the-amount rules that have come due and not been
+ * answered yet: one entry per rule, oldest date first. They are answered in
+ * order, so the rule's last-run date can keep marking how far it has got.
+ */
+export function pendingOccurrences(rules: RecurringRule[], today: ISODate): PendingOccurrence[] {
+  const out: PendingOccurrence[] = [];
+  for (const rule of rules) {
+    if (!rule.active || !rule.askAmount) continue;
+    const from = rule.lastRunDate ? addDays(rule.lastRunDate, 1) : rule.anchorDate;
+    const dates = dueDates(rule, from, today);
+    if (dates.length > 0) out.push({ rule, date: dates[0], more: dates.length - 1 });
+  }
+  return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}
+
+/**
+ * Answers one waiting occurrence. A positive amount logs it; null or 0 skips it.
+ * Either way the rule moves past that date.
+ */
+export function resolveOccurrence(rule: RecurringRule, date: ISODate, amount: number | null, stamp = Date.now()): { transaction: Transaction | null; rule: RecurringRule } {
+  const transaction: Transaction | null =
+    amount && amount > 0
+      ? { id: occurrenceId(rule.id, date), type: rule.type, amount, categoryId: rule.categoryId, date, note: rule.note, createdAt: stamp }
+      : null;
+  return { transaction, rule: { ...rule, lastRunDate: date } };
+}
+
 export function describeRule(rule: Pick<RecurringRule, 'frequency' | 'interval'>): string {
   const unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[rule.frequency];
   const n = Math.max(1, Math.floor(rule.interval));
   return n === 1 ? `Every ${unit}` : `Every ${n} ${unit}s`;
+}
+
+/** "on the 5th", "on the last day": which day a monthly or yearly rule lands on. Empty for daily and weekly rules. */
+export function describeDay(rule: Pick<RecurringRule, 'frequency' | 'anchorDate' | 'monthEnd'>): string {
+  if (rule.frequency !== 'monthly' && rule.frequency !== 'yearly') return '';
+  if (rule.monthEnd) return 'on the last day';
+  const d = parts(rule.anchorDate).d;
+  const suffix = d % 10 === 1 && d !== 11 ? 'st' : d % 10 === 2 && d !== 12 ? 'nd' : d % 10 === 3 && d !== 13 ? 'rd' : 'th';
+  return `on the ${d}${suffix}`;
 }

@@ -1,14 +1,15 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { clampStartDay, formatCycle, today } from '../src/domain/dates';
+import { clampStartDay, describeStartDay, formatCycle, today } from '../src/domain/dates';
 import { monthlyGoalNeed } from '../src/domain/goals';
 import { parseAmount, toInput } from '../src/domain/money';
 import { computePlan } from '../src/domain/plan';
 import type { SaveRule } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
 import { useMoney } from '../src/ui/hooks';
-import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
+import { DayOfMonthPicker } from '../src/ui/calendar';
+import { Button, Field, Panel, Screen, Segmented, Txt } from '../src/ui/kit';
 import { useTheme } from '../src/ui/theme';
 
 const RULE_HELP: Record<SaveRule, string> = {
@@ -58,14 +59,22 @@ export default function Plan() {
       <Txt v="small" dim>When do you set savings aside?</Txt>
       <Segmented value={rule} onChange={setRule} options={[{ value: 'start', label: 'Start of month' }, { value: 'end', label: 'End of month' }]} />
       <Txt v="small" dim>{RULE_HELP[rule]}</Txt>
+      {rule === 'start' ? <Txt v="small" color={t.info}>Income different every month? "End of month" suits you better: the limit follows what has actually arrived.</Txt> : null}
 
       <Txt v="small" dim>Your month starts on</Txt>
-      <Stepper label={`Day ${startDay}`} onPrev={() => setStartDay(startDay === 1 ? 28 : startDay - 1)} onNext={() => setStartDay(startDay === 28 ? 1 : startDay + 1)} />
+      <DayOfMonthPicker value={startDay} onChange={setStartDay} />
       <Txt v="small" dim>
         {startDay === 1
-          ? 'Calendar months. Paid on another day? Set it here so budgets and your daily limit run from pay day to pay day.'
-          : `This month runs ${formatCycle(now, startDay)}. Budgets, analytics and your daily limit follow it.`}
+          ? 'Calendar months. Paid on another day? Pick it here so budgets and your daily limit run from pay day to pay day.'
+          : `Your month starts on ${describeStartDay(startDay)}. This one runs ${formatCycle(now, startDay)}. Budgets, analytics and your daily limit follow it.`}
       </Txt>
+      {startDay > 28 ? (
+        <Txt v="small" color={t.info}>
+          {startDay === 31
+            ? 'Day 31 means the last day of every month: the 31st, the 30th, or the 28th/29th in February.'
+            : `Months without a day ${startDay} (February${startDay === 30 ? '' : ' in most years'}) start on their last day instead.`}
+        </Txt>
+      ) : null}
 
       <Panel alt style={{ gap: 6 }}>
         <Txt v="h">Preview for today</Txt>

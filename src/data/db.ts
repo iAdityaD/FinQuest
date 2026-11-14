@@ -86,6 +86,17 @@ async function open() {
     await seedCategories(db);
     await db.execAsync('PRAGMA user_version = 3;');
   }
+
+  if (version < 4) {
+    // Variable amounts: a rule can wait for the user to enter each occurrence.
+    await db.execAsync('ALTER TABLE recurring ADD COLUMN ask_amount INTEGER NOT NULL DEFAULT 0;');
+    // Monthly rules can follow the last day of the month instead of a day number.
+    await db.execAsync('ALTER TABLE recurring ADD COLUMN month_end INTEGER NOT NULL DEFAULT 0;');
+    // A new built-in category for SIPs and other investments. Only this one is added:
+    // re-seeding the whole list would bring back categories the user deleted.
+    await db.runAsync("INSERT OR IGNORE INTO categories (id, name, sprite, color, type, sort, archived) VALUES ('invest', 'Investments', 'invest', '#4cd964', 'expense', 8, 0)");
+    await db.execAsync('PRAGMA user_version = 4;');
+  }
   return db;
 }
 

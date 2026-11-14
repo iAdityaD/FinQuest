@@ -2,13 +2,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { GOAL_ICONS } from '../src/domain/categories';
-import { addDays, addMonths, formatLong, today } from '../src/domain/dates';
+import { addMonths, formatLong, today } from '../src/domain/dates';
 import { goalProgress } from '../src/domain/goals';
 import { parseAmount, toInput } from '../src/domain/money';
 import { useStore } from '../src/store/useStore';
+import { DateField } from '../src/ui/calendar';
 import { confirm } from '../src/ui/dialog';
 import { useMoney } from '../src/ui/hooks';
-import { Button, Field, Panel, Screen, Segmented, Stepper, Txt } from '../src/ui/kit';
+import { Button, Field, Panel, Screen, Segmented, Txt } from '../src/ui/kit';
 import { Sprite } from '../src/ui/Sprite';
 import { useTheme } from '../src/ui/theme';
 
@@ -75,13 +76,7 @@ export default function GoalForm() {
       <Txt v="small" dim>Target date</Txt>
       <Segmented value={hasDate} onChange={setHasDate} options={[{ value: 'yes', label: 'Set a date' }, { value: 'no', label: 'No deadline' }]} />
       {hasDate === 'yes' ? (
-        <>
-          <Stepper label={formatLong(date)} onPrev={() => setDate(addMonths(date, -1))} onNext={() => setDate(addMonths(date, 1))} />
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Button label="- 1 day" kind="ghost" style={{ flex: 1 }} onPress={() => setDate(addDays(date, -1))} />
-            <Button label="+ 1 day" kind="ghost" style={{ flex: 1 }} onPress={() => setDate(addDays(date, 1))} />
-          </View>
-        </>
+        <DateField value={date} onChange={setDate} title="Target date" format={formatLong} />
       ) : null}
 
       {valid && preview.status === 'active' ? (

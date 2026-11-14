@@ -9,7 +9,10 @@ Built with React Native (Expo). Android first, iOS from the same codebase. No ac
 ## Features
 
 - **Transactions**: add, edit and delete income and expenses with category, date and note. Search and filter by month.
-- **Repeating transactions**: rent, salary and subscriptions that log themselves every day, week, month or year, and catch up on any they missed while the app was closed. Pause, edit or stop them under More > Repeating.
+- **Repeating transactions**: rent, SIPs and subscriptions that log themselves every day, week, month or year, and catch up on any they missed while the app was closed. Edit, pause or delete them under More > Repeating.
+- **Variable amounts**: a repeat can ask you for the amount each time instead of logging itself, for a salary or bill that changes.
+- **Real month ends**: a calendar for picking dates, repeats on the last day of the month, and a month start on any day from 1 to 31. February and leap years are handled.
+- **Quest guide**: an in-app guide to XP, levels, daily quests and how dates and repeats work.
 - **Your own categories**: add, rename, reorder and archive categories, each with its own icon and chart colour. Archived ones stay on old transactions.
 - **Your own month start**: paid on the 25th? Set the day your month starts in the savings plan; budgets, analytics and the daily limit then run from pay day to pay day.
 - **Savings plan**: set a monthly income and a monthly savings target. FinQuest shows a **safe to spend today** amount that keeps you on target, and adjusts it every day.

@@ -1,4 +1,4 @@
-import { addDays, addMonths, cycleFor, diffDays } from './dates';
+import { addDays, cycleFor, diffDays, shiftCycle } from './dates';
 import type { Goal, ISODate, SaveRule } from './types';
 
 /**
@@ -10,9 +10,9 @@ export function contributionDates(today: ISODate, target: ISODate, rule: SaveRul
   const out: ISODate[] = [];
   const cycle = cycleFor(today, startDay);
   // First day of the cycle each contribution belongs to.
-  let start = rule === 'start' && cycle.start !== today ? addMonths(cycle.start, 1) : cycle.start;
-  for (; out.length < 1200; start = addMonths(start, 1)) {
-    const due = rule === 'start' ? start : addDays(addMonths(start, 1), -1);
+  let start = rule === 'start' && cycle.start !== today ? shiftCycle(cycle.start, startDay, 1) : cycle.start;
+  for (; out.length < 1200; start = shiftCycle(start, startDay, 1)) {
+    const due = rule === 'start' ? start : addDays(shiftCycle(start, startDay, 1), -1);
     if (due > target) break;
     out.push(due);
   }

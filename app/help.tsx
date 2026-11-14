@@ -18,6 +18,7 @@ const CHAPTERS = [
   { id: 'xp', label: 'Earning XP' },
   { id: 'levels', label: 'Levels' },
   { id: 'tools', label: 'Your toolkit' },
+  { id: 'dates', label: 'Dates & repeats' },
   { id: 'tips', label: 'Pro tips' },
 ] as const;
 type ChapterId = (typeof CHAPTERS)[number]['id'];
@@ -39,6 +40,43 @@ const TOOLS: { sprite: string; title: string; body: string; href: string }[] = [
   { sprite: 'salary', title: 'Savings plan', body: 'Income and target in, daily limit out.', href: '/plan' },
   { sprite: 'repeat', title: 'Repeating', body: 'Rent and salary that log themselves.', href: '/recurring' },
   { sprite: 'shopping', title: 'Categories', body: 'Make the list your own.', href: '/categories' },
+];
+
+const GUIDES: { sprite: string; title: string; lines: string[] }[] = [
+  {
+    sprite: 'calendar',
+    title: 'Picking a date',
+    lines: [
+      'Wherever you see a date, tap it to open the calendar and jump to any day. The arrows beside it move one day at a time.',
+    ],
+  },
+  {
+    sprite: 'repeat',
+    title: 'The last day of the month',
+    lines: [
+      'Months end on the 31st, the 30th, or the 28th (the 29th in a leap year). FinQuest works out the right one for each month and year.',
+      'Start a monthly repeat on the last day of a month and you can choose "Last day of month": it then lands on Jan 31, Feb 28, Mar 31, Apr 30 and so on.',
+      'In the savings plan, picking day 31 as your month start means the same thing: your month always begins on the last day.',
+    ],
+  },
+  {
+    sprite: 'invest',
+    title: 'Fixed amounts: rent, SIPs, subscriptions',
+    lines: [
+      'Add the transaction once, choose how often it repeats, and keep "Same each time". FinQuest logs it whenever it comes due, even if the app was closed for weeks.',
+      'Raising your SIP? Open More > Repeating, tap Edit and change the amount. Entries already logged keep their old amount; new ones use the new figure.',
+      'Pause stops it without losing it (paused days are not back-filled). Delete removes the rule; what it already logged stays.',
+    ],
+  },
+  {
+    sprite: 'salary',
+    title: 'Amounts that change: variable salary, bills',
+    lines: [
+      'If your pay is different every month, do not guess. Either add it by hand the day it arrives, or make it a repeat set to "Ask me each time".',
+      'An "Ask me" repeat never logs anything by itself. On the due date a card appears on Home asking how much it was. Enter the real figure, or skip it.',
+      'In the savings plan, choose "End of month": your daily limit then follows the income that has actually arrived, not a planned number.',
+    ],
+  },
 ];
 
 const TIPS = [
@@ -233,7 +271,21 @@ export default function Help() {
             ))}
           </Panel>
 
-          {chapter('tips', 6, 'Pro tips')}
+          {chapter('dates', 6, 'Dates and repeats')}
+          {GUIDES.map((g) => (
+            <Panel key={g.title} style={{ gap: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Sprite name={g.sprite} size={30} tint={t.accent} />
+                <Txt v="h" style={{ flex: 1 }}>{g.title}</Txt>
+              </View>
+              {g.lines.map((line) => (
+                <Txt key={line} dim>{line}</Txt>
+              ))}
+            </Panel>
+          ))}
+          <Button label="Open Repeating" kind="ghost" sprite="repeat" onPress={() => router.push('/recurring')} />
+
+          {chapter('tips', 7, 'Pro tips')}
           {TIPS.map((tip, i) => (
             <Panel key={i} style={{ flexDirection: 'row', gap: 10, borderLeftWidth: 8, borderLeftColor: t.info }}>
               <Txt style={{ flex: 1 }}>{tip}</Txt>

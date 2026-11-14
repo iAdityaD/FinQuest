@@ -1,4 +1,4 @@
-import { addDays, addMonths, clampStartDay, cycleFor, formatCycle, formatLong, iso, monthKey, monthShort, parts, weekdayShort, yearKey } from './dates';
+import { addDays, addMonths, clampStartDay, cycleFor, formatCycle, shiftCycle, formatLong, iso, monthKey, monthShort, parts, weekdayShort, yearKey } from './dates';
 import type { ISODate, Transaction } from './types';
 
 export type PeriodKind = 'day' | 'month' | 'year';
@@ -38,8 +38,8 @@ export function shiftPeriod(p: Period, delta: number): Period {
   if (p.kind === 'day') return { kind: 'day', anchor: addDays(p.anchor, delta) };
   if (p.kind === 'month') {
     // Shift from the cycle start so a late-month anchor cannot be clamped into the wrong cycle.
-    const from = clampStartDay(p.startDay) === 1 ? p.anchor : cycleFor(p.anchor, p.startDay).start;
-    return { ...p, anchor: addMonths(from, delta) };
+    if (clampStartDay(p.startDay) === 1) return { ...p, anchor: addMonths(p.anchor, delta) };
+    return { ...p, anchor: shiftCycle(p.anchor, p.startDay, delta) };
   }
   return { kind: 'year', anchor: addMonths(p.anchor, delta * 12) };
 }

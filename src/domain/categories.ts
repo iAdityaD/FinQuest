@@ -29,6 +29,7 @@ export const CATEGORIES: Category[] = seed([
   ['health', 'Health', 'health', '#ff5a6e', 'expense'],
   ['education', 'Education', 'education', '#5ce1e6', 'expense'],
   ['fun', 'Entertainment', 'fun', '#a66bff', 'expense'],
+  ['invest', 'Investments', 'invest', '#4cd964', 'expense'],
   ['other', 'Other', 'other', '#6f6a8a', 'expense'],
   ['salary', 'Salary', 'salary', '#4cd964', 'income'],
   ['gift', 'Gift', 'gift', '#ffd54a', 'income'],
@@ -98,7 +99,7 @@ export function moveCategory(list: Category[], id: string, direction: -1 | 1): C
 }
 
 /** Sprites and colours offered when making a category. */
-export const CATEGORY_SPRITES = ['food', 'travel', 'shopping', 'bills', 'house', 'health', 'education', 'fun', 'gift', 'salary', 'coin', 'device', 'chest', 'shield', 'star', 'target', 'flame', 'other'];
+export const CATEGORY_SPRITES = ['food', 'travel', 'shopping', 'bills', 'house', 'health', 'education', 'fun', 'invest', 'gift', 'salary', 'coin', 'device', 'chest', 'shield', 'star', 'target', 'flame', 'other'];
 export const CATEGORY_COLORS = ['#ff9f43', '#ffd54a', '#4cd964', '#7bd88f', '#5ce1e6', '#4aa8ff', '#a66bff', '#ff7ac6', '#ff5a6e', '#c98b4a', '#9aa0b5', '#6f6a8a'];
 
 export const GOAL_ICONS = ['target', 'device', 'shield', 'house', 'gift', 'star', 'chest', 'education'];

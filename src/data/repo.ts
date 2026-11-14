@@ -10,7 +10,7 @@ interface GoalRow { id: string; name: string; icon: string; target_amount: numbe
 interface BudgetRow { category_id: string; amount: number }
 interface RecurringRow {
   id: string; type: string; amount: number; category_id: string; note: string; frequency: string; interval: number;
-  anchor_date: string; end_date: string | null; last_run_date: string | null; active: number;
+  anchor_date: string; end_date: string | null; last_run_date: string | null; active: number; ask_amount: number; month_end: number;
 }
 
 export interface Snapshot {
@@ -49,7 +49,7 @@ export async function loadAll(): Promise<Snapshot> {
     budgets: budgetRows.map((r) => ({ categoryId: r.category_id, amount: r.amount })),
     recurring: recurringRows.map((r) => ({
       id: r.id, type: r.type as TxType, amount: r.amount, categoryId: r.category_id, note: r.note, frequency: r.frequency as Frequency,
-      interval: r.interval, anchorDate: r.anchor_date, endDate: r.end_date, lastRunDate: r.last_run_date, active: r.active !== 0,
+      interval: r.interval, anchorDate: r.anchor_date, endDate: r.end_date, lastRunDate: r.last_run_date, active: r.active !== 0, askAmount: r.ask_amount !== 0, monthEnd: r.month_end !== 0,
     })),
     categories: await readCategories(db),
     settings: { ...DEFAULT_SETTINGS, ...saved },
@@ -89,8 +89,8 @@ export async function putBudget(b: Budget) {
 }
 
 const RECURRING_SQL =
-  'INSERT OR REPLACE INTO recurring (id, type, amount, category_id, note, frequency, "interval", anchor_date, end_date, last_run_date, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-const recurringArgs = (r: RecurringRule) => [r.id, r.type, r.amount, r.categoryId, r.note, r.frequency, r.interval, r.anchorDate, r.endDate, r.lastRunDate, r.active ? 1 : 0];
+  'INSERT OR REPLACE INTO recurring (id, type, amount, category_id, note, frequency, "interval", anchor_date, end_date, last_run_date, active, ask_amount, month_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+const recurringArgs = (r: RecurringRule) => [r.id, r.type, r.amount, r.categoryId, r.note, r.frequency, r.interval, r.anchorDate, r.endDate, r.lastRunDate, r.active ? 1 : 0, r.askAmount ? 1 : 0, r.monthEnd ? 1 : 0];
 
 export async function putRecurring(rule: RecurringRule) {
   const db = await getDb();

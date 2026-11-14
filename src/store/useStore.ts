@@ -4,7 +4,7 @@ import { CATEGORIES, canDelete, moveCategory as moveCategoryIn, nextSort, replac
 import type { Category } from '../domain/categories';
 import { today } from '../domain/dates';
 import { demoData } from '../domain/demo';
-import { materialize } from '../domain/recurring';
+import { materialize, resolveOccurrence as resolveIn } from '../domain/recurring';
 import { DEFAULT_SETTINGS } from '../domain/types';
 import type { Budget, Goal, RecurringRule, Settings, Transaction } from '../domain/types';
 
@@ -33,6 +33,8 @@ interface State {
   deleteRecurring: (id: string) => void;
   /** Logs every recurring occurrence that has come due. Safe to call as often as you like. */
   runRecurring: () => void;
+  /** Answers a waiting variable-amount occurrence: an amount logs it, null skips it. */
+  resolveOccurrence: (ruleId: string, date: string, amount: number | null) => void;
   /** Adds a category (no id) or changes an existing one, including archiving and restoring it. */
   saveCategory: (input: CategoryInput) => void;
   moveCategory: (id: string, direction: -1 | 1) => void;
@@ -136,6 +138,17 @@ export const useStore = create<State>()((set, get) => ({
       };
     });
     persist(repo.applyRecurringRun(transactions, updatedRules));
+  },
+
+  resolveOccurrence: (ruleId, date, amount) => {
+    const current = get().recurring.find((r) => r.id === ruleId);
+    if (!current) return;
+    const { transaction, rule } = resolveIn(current, date, amount);
+    set((s) => ({
+      recurring: s.recurring.map((r) => (r.id === rule.id ? rule : r)),
+      transactions: transaction && !s.transactions.some((t) => t.id === transaction.id) ? [...s.transactions, transaction].sort(newestFirst) : s.transactions,
+    }));
+    persist(repo.applyRecurringRun(transaction ? [transaction] : [], [rule]));
   },
 
   saveCategory: (input) => {

@@ -33,6 +33,8 @@ export const SPRITES: Record<string, string[]> = {
   wallet: ['..........', '.aaaaaaaa.', 'aa......aa', 'aaaaaaaaaa', 'aaaa..aaaa', 'aaaa..aaaa', 'aaaaaaaaaa', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........'],
   menu: ['..........', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........', 'aaaaaaaaaa', 'aaaaaaaaaa', '..........'],
   gear: ['....aa....', '.aa.aa.aa.', '.aaaaaaaa.', '..aa..aa..', 'aaa....aaa', 'aaa....aaa', '..aa..aa..', '.aaaaaaaa.', '.aa.aa.aa.', '....aa....'],
+  invest: ['..........', '.......kk.', '......kggk', '...kk.kggk', '..kggkkggk', '..kggkkggk', 'kkkggkkggk', 'kggkggkggk', 'kggkggkggk', 'kkkkkkkkkk'],
+  calendar: ['.a......a.', 'aaaaaaaaaa', 'aaaaaaaaaa', 'a........a', 'a.aa.aa..a', 'a........a', 'a.aa.aa..a', 'a........a', 'aaaaaaaaaa', '..........'],
   repeat: ['...aaaa.a.', '..aa...aaa', '.aa...aaaa', '.aa.......', '.aa.......', '.......aa.', '.......aa.', 'aaaa...aa.', 'aaa...aa..', '.a.aaaa...'],
   plus: ['..........', '....aa....', '....aa....', '....aa....', '.aaaaaaaa.', '.aaaaaaaa.', '....aa....', '....aa....', '....aa....', '..........'],
 };

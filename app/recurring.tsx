@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
 import { formatLong, today } from '../src/domain/dates';
-import { describeRule, nextDue } from '../src/domain/recurring';
+import { describeDay, describeRule, nextDue } from '../src/domain/recurring';
 import type { RecurringRule } from '../src/domain/types';
 import { useStore } from '../src/store/useStore';
 import { confirm } from '../src/ui/dialog';
@@ -43,13 +43,17 @@ export default function Recurring() {
             <Row
               sprite={cat.sprite}
               title={rule.note || cat.name}
-              subtitle={`${describeRule(rule)} · ${status(rule)}`}
-              right={<Txt v="h" color={rule.type === 'income' ? t.good : t.bad}>{fmt(rule.type === 'income' ? rule.amount : -rule.amount, { sign: true })}</Txt>}
+              subtitle={`${[describeRule(rule), describeDay(rule)].filter(Boolean).join(' ')} · ${status(rule)}`}
+              right={
+                <Txt v="h" color={rule.type === 'income' ? t.good : t.bad}>
+                  {rule.askAmount ? (rule.amount > 0 ? `~${fmt(rule.amount)}` : 'Varies') : fmt(rule.type === 'income' ? rule.amount : -rule.amount, { sign: true })}
+                </Txt>
+              }
               onPress={() => router.push({ pathname: '/transaction', params: { rule: rule.id } })}
             />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View style={{ flex: 1 }}>
-                <Badge label={rule.active ? 'Active' : 'Paused'} color={rule.active ? t.good : t.dim} />
+                <Badge label={!rule.active ? 'Paused' : rule.askAmount ? 'Asks you the amount' : 'Logs itself'} color={!rule.active ? t.dim : rule.askAmount ? t.info : t.good} />
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
